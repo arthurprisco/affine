@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true
+  },
+  "include": [
+    "App.tsx",
+    "index.ts",
+    "src/**/*",
+    "*.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}
