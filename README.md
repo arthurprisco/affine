@@ -88,12 +88,12 @@ O servidor sobe em **http://localhost:3000** (ou na porta definida em `PORT`) e 
 
 A autenticação é toda servida pelo Better Auth sob o prefixo `/api/auth`:
 
-| Método | Rota                       | Descrição                                |
-| ------ | -------------------------- | ---------------------------------------- |
-| POST   | `/api/auth/sign-up/email`  | Cria um novo usuário (email + senha)     |
-| POST   | `/api/auth/sign-in/email`  | Autentica e cria a sessão                |
-| POST   | `/api/auth/sign-out`       | Encerra a sessão                         |
-| GET    | `/api/auth/get-session`    | Retorna a sessão/usuário atual           |
+| Método | Rota                      | Descrição                            |
+| ------ | ------------------------- | ------------------------------------ |
+| POST   | `/api/auth/sign-up/email` | Cria um novo usuário (email + senha) |
+| POST   | `/api/auth/sign-in/email` | Autentica e cria a sessão            |
+| POST   | `/api/auth/sign-out`      | Encerra a sessão                     |
+| GET    | `/api/auth/get-session`   | Retorna a sessão/usuário atual       |
 
 No app essas rotas não são chamadas na mão: use o `authClient` (`src/lib/auth-client.ts`), que expõe `authClient.signUp.email()`, `authClient.signIn.email()` e `authClient.useSession()`.
 
@@ -156,13 +156,13 @@ npm start
 
 ## Problemas comuns
 
-| Sintoma                                            | Causa provável / solução                                                                     |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| App trava na tela de carregamento ou erro de rede   | `EXPO_PUBLIC_API_URL` com IP errado, backend parado, ou celular em outra rede Wi-Fi           |
-| Erro de conexão com o banco ao subir o backend      | PostgreSQL não está rodando ou `DATABASE_URL` incorreta                                       |
-| `Unknown file extension ".ts"` ao rodar o backend   | Node antigo — atualize para 22.18+ ou 24 LTS                                                   |
-| Login/cadastro falha com erro de origem             | Confira `BETTER_AUTH_URL` e os `trustedOrigins` em `backend/auth.ts`                           |
-| Tabelas inexistentes nas chamadas de auth           | Rode `npx drizzle-kit migrate` dentro de `backend/`                                            |
-| Mudanças no `.env` não surtem efeito                | Reinicie o processo (Metro e/ou backend)                                                       |
+| Sintoma                                           | Causa provável / solução                                                            |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| App trava na tela de carregamento ou erro de rede | `EXPO_PUBLIC_API_URL` com IP errado, backend parado, ou celular em outra rede Wi-Fi |
+| Erro de conexão com o banco ao subir o backend    | PostgreSQL não está rodando ou `DATABASE_URL` incorreta                             |
+| `Unknown file extension ".ts"` ao rodar o backend | Node antigo — atualize para 22.18+ ou 24 LTS                                        |
+| Login/cadastro falha com erro de origem           | Confira `BETTER_AUTH_URL` e os `trustedOrigins` em `backend/auth.ts`                |
+| Tabelas inexistentes nas chamadas de auth         | Rode `npx drizzle-kit migrate` dentro de `backend/`                                 |
+| Mudanças no `.env` não surtem efeito              | Reinicie o processo (Metro e/ou backend)                                            |
 
 > O firewall do Windows pode bloquear conexões vindas do celular na porta 3000. Se o app não conectar mesmo com o IP certo, libere a porta ou permita o Node na rede privada.
