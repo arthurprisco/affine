@@ -1,0 +1,27 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F7F9FC" },
+  navbar: { minHeight: 92, paddingTop: 38, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#293B51" },
+  backButton: { position: "absolute", left: 16, bottom: 8, width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  backButtonText: { color: "#FFFFFF", fontSize: 34, lineHeight: 36, fontWeight: "300" },
+  navTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "700" },
+  content: { padding: 24, paddingBottom: 48, alignItems: "stretch" },
+  avatar: { alignSelf: "center", width: 104, height: 104, borderRadius: 52, backgroundColor: "#3E5570", alignItems: "center", justifyContent: "center", marginTop: 12 },
+  avatarText: { color: "#FFFFFF", fontSize: 32, fontWeight: "700" },
+  helper: { color: "#718095", fontSize: 14, textAlign: "center", marginTop: 14, marginBottom: 32 },
+  fieldGroup: { marginBottom: 22 },
+  label: { color: "#293B51", fontSize: 14, fontWeight: "700", marginBottom: 8 },
+  input: { minHeight: 52, borderWidth: 1, borderColor: "#D5DDE7", borderRadius: 14, backgroundColor: "#FFFFFF", paddingHorizontal: 16, color: "#293B51", fontSize: 16 },
+  disabledInput: { backgroundColor: "#EDF1F5", color: "#718095" },
+  fieldHint: { color: "#8795A5", fontSize: 12, marginTop: 7, lineHeight: 17 },
+  securitySection: { marginTop: 6, marginBottom: 10, paddingTop: 22, borderTopWidth: 1, borderTopColor: "#E1E7EE" },
+  sectionTitle: { color: "#293B51", fontSize: 18, fontWeight: "700", marginBottom: 6 },
+  sectionHint: { color: "#718095", fontSize: 13, lineHeight: 18, marginBottom: 14 },
+  inputSpacing: { minHeight: 52, borderWidth: 1, borderColor: "#D5DDE7", borderRadius: 14, backgroundColor: "#FFFFFF", paddingHorizontal: 16, color: "#293B51", fontSize: 16, marginTop: 10 },
+  secondaryButton: { minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: "#293B51", alignItems: "center", justifyContent: "center", marginTop: 12 },
+  secondaryButtonText: { color: "#293B51", fontSize: 14, fontWeight: "700" },
+  saveButton: { minHeight: 54, borderRadius: 14, backgroundColor: "#293B51", alignItems: "center", justifyContent: "center", marginTop: 10 },
+  disabledButton: { opacity: 0.65 },
+  saveText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+});
