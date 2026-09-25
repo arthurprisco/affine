@@ -19,4 +19,7 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins: ["exp://", "affine://"],
+  user: {
+    changeEmail: { enabled: true, updateEmailWithoutVerification: true },
+  },
 });
