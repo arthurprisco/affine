@@ -1,51 +1,41 @@
 import { Button, Pressable, ScrollView, Text, View } from "react-native";
 import Title from "../../../components/Title";
 import CardProduct from "../../../components/CardProduct";
-import { styles } from "./styles";
 import { useNavigation } from "@react-navigation/native";
 import { CircularProgress } from "../../../components/CircularProgress";
-import { themes } from "../../../global/themes";
+import { colors } from "../../../shared/colors";
 
 export default function Home() {
   const navigation = useNavigation();
   return (
-    <View style={styles.container}>
+    <View className="flex-1 items-center bg-background">
       <ScrollView>
-        <View style={styles.content}>
+        <View className="mb-20 h-full w-full items-center p-6">
           <Title label="lotes" />
-          <View style={styles.mainCard}>
+          <View className="h-48 w-full flex-row items-center justify-evenly rounded-xl border border-line bg-white">
             <CircularProgress
               value="50"
               label="CARNES"
               percentage={50} // Define o tamanho do traço azul
-              color={themes.colors.primary}
-              trackColor={themes.colors.secondary}
+              color={colors.primary}
+              trackColor={colors["primary-orange"]}
             />
             <CircularProgress
               value="10"
               label="CARNES"
               percentage={10} // Define o tamanho do traço azul
-              color={themes.colors.primary}
-              trackColor={themes.colors.secondary}
+              color={colors.primary}
+              trackColor={colors["primary-orange"]}
             />
             <CircularProgress
               value="10"
               label="CARNES"
               percentage={10} // Define o tamanho do traço azul
-              color={themes.colors.primary}
-              trackColor={themes.colors.secondary}
+              color={colors.primary}
+              trackColor={colors["primary-orange"]}
             />
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              width: "100%",
-              justifyContent: "space-between",
-              marginTop: 16,
-              marginBottom: 8,
-              paddingHorizontal: 8,
-            }}
-          >
+          <View className="mb-2 mt-4 w-full flex-row justify-between px-2">
             <Text>Próximos ao ponto</Text>
             <Pressable
               onPress={() => {
@@ -55,7 +45,7 @@ export default function Home() {
               <Text>Ver todos</Text>
             </Pressable>
           </View>
-          <View style={{ width: "100%", gap: 8 }}>
+          <View className="w-full gap-2">
             <CardProduct />
             <CardProduct />
             <CardProduct />

@@ -1,11 +1,6 @@
 import { Text, View } from "react-native";
-import { themes } from "../../global/themes";
-import { styles } from "./styles";
 
 export default function CardProduct() {
-  const products = [
-    { name: "Queijo Canastra", amount: 20, batch: "#2026QJ102", steps: [{}] },
-  ];
   const steps = [
     { completed: true },
     { completed: true },
@@ -31,58 +26,46 @@ export default function CardProduct() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.cardHeader}>
-        <View style={{ alignItems: "flex-start", gap: 6 }}>
+    <View className="w-full gap-[10px] rounded-lg border border-line bg-white p-4">
+      <View className="flex-row items-center justify-between">
+        <View className="items-start gap-[6px]">
           <View>
-            <Text style={{ fontSize: 16 }}>Queijo Canastra • 20 unidades</Text>
+            <Text className="text-base">Queijo Canastra • 20 unidades</Text>
           </View>
-          <View style={styles.badgeBatch}>
-            <Text style={{ color: "#4D4D4D", fontSize: 13 }}>
-              Lote #2026QJ102
-            </Text>
+          <View className="rounded-lg bg-[#ECECEC] px-[6px] py-[2px]">
+            <Text className="text-[13px] text-[#4D4D4D]">Lote #2026QJ102</Text>
           </View>
         </View>
 
         <View>
-          <View style={styles.remainingDaysBox}>
-            <Text style={styles.remainingDaysText}>3 dias</Text>
+          <View className="rounded-lg border border-primary-orange bg-[#F8E1CD]">
+            <Text className="px-[6px] py-1 text-[13px] text-primary-orange">
+              3 dias
+            </Text>
           </View>
         </View>
       </View>
 
-      <View style={{ gap: 10 }}>
-        <View style={{ gap: 4 }}>
-          <View style={styles.progressBarHeader}>
-            <Text style={{ color: "#666666", fontSize: 12 }}>Maturação</Text>
-            <Text style={{ color: "#666666", fontSize: 12 }}>42/45 dias</Text>
+      <View className="gap-[10px]">
+        <View className="gap-1">
+          <View className="flex-row justify-between px-1">
+            <Text className="text-xs text-[#666666]">Maturação</Text>
+            <Text className="text-xs text-[#666666]">42/45 dias</Text>
           </View>
-          <View style={{ position: "relative" }}>
-            <View style={styles.progressBarPlaceholder}></View>
-            <View style={styles.progressBar}></View>
+          <View className="relative">
+            <View className="absolute h-1 w-full rounded-lg bg-[#D9D9D9]" />
+            <View className="absolute h-1 w-[90%] rounded-lg bg-primary" />
           </View>
         </View>
 
-        <View style={{ gap: 4 }}>
-          <Text
-            style={{
-              textAlign: "right",
-              paddingHorizontal: 4,
-              color: "#666666",
-              fontSize: 12,
-            }}
-          >{`${getCompletedSteps()}/${steps.length}`}</Text>
-          <View style={{ gap: 4, flexDirection: "row" }}>
+        <View className="gap-1">
+          <Text className="px-1 text-right text-xs text-[#666666]">{`${getCompletedSteps()}/${steps.length}`}</Text>
+          <View className="flex-row gap-1">
             {steps.map((step, index) => (
               <View
-                style={{
-                  height: 4,
-                  flex: 1,
-                  borderRadius: 8,
-                  backgroundColor: step.completed ? "green" : "#D9D9D9",
-                }}
+                className={`h-1 flex-1 rounded-lg ${step.completed ? "bg-[green]" : "bg-[#D9D9D9]"}`}
                 key={index}
-              ></View>
+              />
             ))}
           </View>
         </View>

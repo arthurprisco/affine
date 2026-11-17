@@ -1,11 +1,5 @@
 import { ReactNode } from "react";
-import {
-  Text,
-  TextInput,
-  TextInputProps,
-  View,
-} from "react-native";
-import { styles } from "./styles";
+import { Text, TextInput, TextInputProps, View } from "react-native";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -16,15 +10,13 @@ interface InputProps extends TextInputProps {
 export function Input({ label, leftIcon, rightIcon, ...props }: InputProps) {
   return (
     <View>
-      {label && (
-        <Text style={{ paddingLeft: 8, paddingBottom: 4 }}>{label}</Text>
-      )}
-      <View style={styles.inputContent}>
-        {leftIcon && <View style={{ paddingHorizontal: 8 }}>{leftIcon}</View>}
+      {label && <Text className="pb-1 pl-2">{label}</Text>}
+      <View className="flex-row items-center rounded-lg border border-[#9A9A9A] bg-[#F9F9F9]">
+        {leftIcon && <View className="px-2">{leftIcon}</View>}
 
-        <TextInput {...props} style={styles.input} />
+        <TextInput {...props} className="flex-1 rounded-lg px-3" />
 
-        {rightIcon && <View style={{ padding: 8 }}>{rightIcon}</View>}
+        {rightIcon && <View className="p-2">{rightIcon}</View>}
       </View>
     </View>
   );

@@ -1,7 +1,6 @@
 import { View, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { styles } from "./styles";
 
 export function NavBar({ navigation, back }: any) {
   const insets = useSafeAreaInsets();
@@ -11,16 +10,24 @@ export function NavBar({ navigation, back }: any) {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
+    <View
+      className="flex-row items-center justify-between bg-primary px-5 pb-[15px] shadow-md shadow-black/20"
+      style={{ paddingTop: insets.top + 10 }}
+    >
       {back ? (
-        <TouchableOpacity style={styles.iconButton} onPress={navigation.goBack}>
+        // Área de clique maior; margem negativa compensa o padding
+        <TouchableOpacity
+          className="-ml-2 p-2"
+          onPress={navigation.goBack}
+        >
           <Feather name="chevron-left" size={28} color="#00BFFF" />
         </TouchableOpacity>
       ) : (
-        <View style={styles.spacer} />
+        // Mantém o layout equilibrado quando não houver botão de voltar
+        <View className="w-10" />
       )}
 
-      <TouchableOpacity style={styles.iconButton} onPress={openDrawer}>
+      <TouchableOpacity className="-ml-2 p-2" onPress={openDrawer}>
         <Feather name="menu" size={24} color="#fff" />
       </TouchableOpacity>
     </View>

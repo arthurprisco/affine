@@ -5,7 +5,10 @@ module.exports = {
   content: ["./App.tsx", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
-    extend: { colors },
+    extend: {
+      colors,
+      fontFamily: { title: ["PurplePurse_400Regular"] },
+    },
   },
   plugins: [],
 };

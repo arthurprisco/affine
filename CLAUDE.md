@@ -49,14 +49,9 @@ Auth no cliente: `src/lib/auth-client.ts` cria o `authClient` com o plugin `expo
 
 ### Convenções de UI
 
-Organização por pasta: `Componente/index.tsx` + `styles.ts` (+ hooks locais como `useLogin.ts`, `menuItems.ts`). Telas em `src/screens/{auth,app}/<Tela>/`.
+Organização por pasta: `Componente/index.tsx` (+ hooks locais como `useLogin.ts`, `menuItems.ts`). Telas em `src/screens/{auth,app}/<Tela>/`.
 
-Existem **dois sistemas de estilo convivendo** no código:
-
-1. **NativeWind (`className`)** — padrão mais recente: `Button`, `DrawerContent`, telas de Login/Register. Cores vêm de `src/shared/colors.ts`, que o `tailwind.config.js` injeta no tema (`bg-primary`, `text-orange-text-link`, `border-on-primary-faint`…).
-2. **`StyleSheet` em `styles.ts` + `src/global/themes.ts`** — telas de `app/` (Home, AllBatches…), `TabBar`, `NavBar`, `Input`.
-
-As duas paletas são duplicadas com nomes diferentes (`themes.colors.secondary` = `colors["primary-orange"]`). Ao mexer em cor, verificar se o arquivo em questão usa NativeWind ou StyleSheet e, se a mudança for de paleta, atualizar os dois. Preferir NativeWind em código novo.
+O estilo é **só NativeWind (`className`)**. Não usar `StyleSheet` nem criar `styles.ts`. A paleta única fica em `src/shared/colors.ts`, que o `tailwind.config.js` injeta no tema (`bg-primary`, `text-ink`, `border-line`, `text-orange-text-link`, `border-on-primary-faint`…); a fonte do título é `font-title`. Cores avulsas usam valor arbitrário (`bg-[#ECECEC]`). Props que não aceitam classe (cor de ícone, `placeholderTextColor`, `trackColor`) recebem o valor importado de `colors`. Valores dinâmicos de runtime (ex.: `insets.top`) podem ir em `style` inline. Classes condicionais devem ser strings completas, não montadas por interpolação parcial.
 
 Componentes de terceiros só aceitam `className` depois de `cssInterop(...)` — ver `DrawerScrollView` em `src/components/DrawerContent/index.tsx`.
 

@@ -1,7 +1,5 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { styles } from "./styles";
-import { themes } from "../../global/themes";
 
 type CircularProgressProps = {
   value: string;
@@ -26,8 +24,8 @@ export const CircularProgress = ({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <View style={styles.itemContainer}>
-      <View style={styles.svgContainer}>
+    <View className="items-center">
+      <View className="relative items-center justify-center">
         <Svg width={size} height={size}>
           {/* Círculo de Fundo (Trilha) */}
           <Circle
@@ -51,11 +49,13 @@ export const CircularProgress = ({
           />
         </Svg>
         {/* Número centralizado */}
-        <View style={styles.valueContainer}>
-          <Text style={styles.valueText}>{value}</Text>
+        <View className="absolute inset-0 items-center justify-center">
+          <Text className="text-[26px] font-black text-black">{value}</Text>
         </View>
       </View>
-      <Text style={styles.labelText}>{label}</Text>
+      <Text className="mt-3 text-xs font-bold tracking-[1px] text-black">
+        {label}
+      </Text>
     </View>
   );
 };

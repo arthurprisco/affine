@@ -1,10 +1,9 @@
 import { Text, TouchableOpacity, View } from "react-native";
-import { themes } from "../../global/themes";
-import { styles } from "./styles";
+import { colors } from "../../shared/colors";
 
 export function TabBar({ state, descriptors, navigation }: any) {
   return (
-    <View style={styles.container}>
+    <View className="absolute bottom-[18px] left-3 right-3 h-[70px] flex-row items-center justify-around rounded-[20px] bg-primary shadow-lg shadow-black/30">
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
 
@@ -28,8 +27,8 @@ export function TabBar({ state, descriptors, navigation }: any) {
           }
         };
 
-        // Define as cores baseadas no foco
-        const color = isFocused ? themes.colors.secondary : "#fff";
+        // A cor do ícone é passada como valor (prop), não como classe
+        const color = isFocused ? colors["primary-orange"] : "#fff";
 
         const icon = options.tabBarIcon?.({
           color,
@@ -43,10 +42,14 @@ export function TabBar({ state, descriptors, navigation }: any) {
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
-            style={styles.button}
+            className="flex-1 items-center justify-center"
           >
             {icon}
-            <Text style={[styles.label, { color }]}>{label}</Text>
+            <Text
+              className={`mt-1 text-xs font-bold ${isFocused ? "text-primary-orange" : "text-white"}`}
+            >
+              {label}
+            </Text>
           </TouchableOpacity>
         );
       })}

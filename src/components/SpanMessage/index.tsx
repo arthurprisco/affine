@@ -1,5 +1,4 @@
 import { Text, View } from "react-native";
-import { styles } from "./styles";
 import { Feather } from "@expo/vector-icons";
 import { ComponentProps } from "react";
 
@@ -10,30 +9,34 @@ type SpanMessageProps = {
 
 type FeatherIconName = ComponentProps<typeof Feather>["name"];
 
-export function SpanMessage({ message, type }: SpanMessageProps) {
-  function getTypeSpan(): [string, string, FeatherIconName] {
-    switch (type) {
-      case "error":
-        return ["red", "#ffd8d8", "alert-triangle"];
-      case "success":
-        return ["green", "#fff", "check"];
-    }
-  }
+// Classes completas (não montadas por interpolação) para o Tailwind enxergá-las
+const variants: Record<
+  SpanMessageProps["type"],
+  { box: string; text: string; color: string; icon: FeatherIconName }
+> = {
+  error: {
+    box: "border-[red] bg-[#ffd8d8]",
+    text: "text-[red]",
+    color: "red",
+    icon: "alert-triangle",
+  },
+  success: {
+    box: "border-[green] bg-white",
+    text: "text-[green]",
+    color: "green",
+    icon: "check",
+  },
+};
 
-  const [color, background, iconName] = getTypeSpan();
+export function SpanMessage({ message, type }: SpanMessageProps) {
+  const variant = variants[type];
 
   return (
     <View
-      style={[
-        {
-          backgroundColor: background,
-          borderColor: color,
-        },
-        styles.container,
-      ]}
+      className={`flex-row items-center gap-2 rounded-lg border px-3 py-[6px] ${variant.box}`}
     >
-      <Feather name={iconName} size={20} color={color} />
-      <Text style={{ color: color }}>{message}</Text>
+      <Feather name={variant.icon} size={20} color={variant.color} />
+      <Text className={variant.text}>{message}</Text>
     </View>
   );
 }

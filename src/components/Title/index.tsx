@@ -3,7 +3,6 @@ import {
   useFonts,
   PurplePurse_400Regular,
 } from "@expo-google-fonts/purple-purse";
-import { styles } from "./styles";
 
 type TitleProps = {
   label: string;
@@ -17,10 +16,12 @@ export default function Title({ label }: TitleProps) {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.line}></View>
-      <Text style={styles.title}>{label.toUpperCase()}</Text>
-      <View style={styles.line}></View>
+    <View className="mb-[14px] flex-row items-center gap-4">
+      <View className="h-[2px] w-full flex-1 bg-[gray]" />
+      <Text className="font-title text-2xl tracking-[1px] text-ink">
+        {label.toUpperCase()}
+      </Text>
+      <View className="h-[2px] w-full flex-1 bg-[gray]" />
     </View>
   );
 }
