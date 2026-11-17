@@ -18,42 +18,24 @@ npm run android      # emulador/dispositivo Android
 npm run ios          # simulador iOS (só macOS)
 npm run web
 
-# Backend (em backend/)
-npm install
-npm run dev          # node --watch src/server.ts → http://localhost:3000
-
-# Migrations (em backend/)
-npx drizzle-kit generate   # gera SQL a partir de src/db/schema/
-npx drizzle-kit migrate    # aplica no banco de DATABASE_URL
+# Backend: ver backend/CLAUDE.md (dev, services, migrations)
 ```
 
 Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm run dev` + `npm start` na raiz).
 
 **Não existe setup de testes nem de lint** neste repositório — não invente comandos de `test`/`lint`. A única ferramenta de formatação é o Prettier com `prettier-plugin-tailwindcss` (`.prettierrc`), que ordena as classes NativeWind.
 
-`backend/drizzle/` está **vazio** (migrations não são versionadas), então num clone novo é obrigatório rodar `generate` antes de `migrate`.
-
-Node **22.18+ ou 24 LTS** é requisito rígido: o backend executa `.ts` direto via type stripping nativo. Node antigo falha com `Unknown file extension ".ts"`.
-
 ## Variáveis de ambiente
 
 - Raiz `.env`: `EXPO_PUBLIC_API_URL` — precisa ser o **IP da máquina na rede local** (ex.: `http://192.168.x.x:3000`), nunca `localhost`, porque o Expo Go roda no celular. Alterações só valem depois de reiniciar o Metro.
-- `backend/.env`: `PORT`, `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`.
+
+- Variáveis do backend (`backend/.env`, incluindo `DATABASE_URL`): ver `backend/CLAUDE.md`.
 
 ## Arquitetura
 
-### Backend — hoje é só autenticação
+### Backend
 
-`src/server.ts` (dotenv + listen) → `src/app.ts` (Express 5) → `auth.ts` (Better Auth) → `src/db/` (Drizzle + Postgres).
-
-Toda a superfície HTTP atual é o handler catch-all do Better Auth em `/api/auth/{*any}`: sign-up/sign-in por email+senha, sign-out e get-session. **Não há rotas de domínio** (lotes, produtos, etapas) — isso ainda não existe no backend.
-
-Detalhes que não são óbvios:
-
-- Em `app.ts` a ordem é `cors()` → handler do Better Auth → `express.json()`. O handler precisa vir **antes** de `express.json()` (exigência do Better Auth: o body parser consome o stream). Já o `cors()` precisa vir **antes do handler**, senão não se aplica às rotas de auth (o handler encerra a resposta sem chamar `next()`). `trustedOrigins` em `auth.ts` (`exp://`, `affine://`) é outra coisa: é a validação de origem/CSRF do Better Auth e não emite cabeçalhos CORS.
-- O backend é ESM (`"type": "module"`) e roda sem build, então **imports relativos precisam da extensão `.ts` explícita** (`import { db } from "./src/db/index.ts"`). Seguir esse padrão em arquivos novos.
-- `backend/tsconfig.json` usa `erasableSyntaxOnly` e `verbatimModuleSyntax`: nada de `enum`, `namespace` ou parameter properties; tipos importados com `import type`.
-- Schemas Drizzle ficam em `src/db/schema/` (só `auth-schema.ts` por enquanto, com as tabelas `user`/`session`/`account`/`verification` no formato do Better Auth). Tabelas usadas pelo auth também precisam ser passadas no `drizzleAdapter({ schema })` de `auth.ts`.
+Hoje é só autenticação (Better Auth + Drizzle + Postgres), sem rotas de domínio. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
 
 ### App mobile — navegação em três camadas
 
