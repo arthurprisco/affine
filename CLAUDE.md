@@ -1,10 +1,6 @@
-# CLAUDE.md
+# Visão geral
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Visão geral
-
-Affine é um app mobile de gestão de produção e estoque de produtos artesanais (queijos, vinhos etc.): acompanha maturação, etapas de produção e vencimento de lotes. Código, comentários e strings de UI são em **pt-BR**.
+Affine é um app mobile de gestão de produção e estoque de produtos artesanais (queijos, vinhos etc.): acompanha maturação, etapas de produção e vencimento de lotes.
 
 O repositório tem **dois projetos npm independentes** (não é monorepo, não há workspaces): a raiz é o app Expo e `backend/` é a API. Cada um tem seu próprio `package.json`, `package-lock.json`, `node_modules` e `.env`, e precisa de `npm install` separado.
 
@@ -29,8 +25,6 @@ Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm 
 
 - Raiz `.env`: `EXPO_PUBLIC_API_URL` — precisa ser o **IP da máquina na rede local** (ex.: `http://192.168.x.x:3000`), nunca `localhost`, porque o Expo Go roda no celular. Alterações só valem depois de reiniciar o Metro.
 
-- Variáveis do backend (`backend/.env`, incluindo `DATABASE_URL`): ver `backend/CLAUDE.md`.
-
 ## Arquitetura
 
 ### Backend
@@ -49,14 +43,22 @@ Auth no cliente: `src/lib/auth-client.ts` cria o `authClient` com o plugin `expo
 
 ### Convenções de UI
 
-Organização por pasta: `Componente/index.tsx` (+ hooks locais como `useLogin.ts`, `menuItems.ts`). Telas em `src/screens/{auth,app}/<Tela>/`.
+Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
-O estilo é **só NativeWind (`className`)**. Não usar `StyleSheet` nem criar `styles.ts`. A paleta única fica em `src/shared/colors.ts`, que o `tailwind.config.js` injeta no tema (`bg-primary`, `text-ink`, `border-line`, `text-orange-text-link`, `border-on-primary-faint`…); a fonte do título é `font-title`. Cores avulsas usam valor arbitrário (`bg-[#ECECEC]`). Props que não aceitam classe (cor de ícone, `placeholderTextColor`, `trackColor`) recebem o valor importado de `colors`. Valores dinâmicos de runtime (ex.: `insets.top`) podem ir em `style` inline. Classes condicionais devem ser strings completas, não montadas por interpolação parcial.
+#### Regras inegociáveis
 
-Componentes de terceiros só aceitam `className` depois de `cssInterop(...)` — ver `DrawerScrollView` em `src/components/DrawerContent/index.tsx`.
+- Telas em `src/screens/`.
+- Antes de criar um componente, procure em `src/components/`. Só crie um novo se nenhum servir.
+- Usar somente NativeWind (`className`). Não usar `StyleSheet` nem criar `styles.ts`.
+- Valores dinâmicos de runtime (ex.: `insets.top`) podem ir em `style` inline.
+- Classes condicionais devem ser strings completas, não montadas por interpolação parcial.
+- Nunca use cores hex, px de raio/borda ou font-family soltos no componente. Use SEMPRE os tokens do `tailwind.config`.
+- Mobile-first: largura de referência 360px, padding lateral da tela 16px.
+- Títulos de seção: fonte Purple Purse, CAIXA ALTA, com linhas horizontais dos dois lados (ver SectionTitle).
+- Texto de interface: sempre a fonte sans (Poppins).
+- Ação principal da tela = botão laranja (primary) de largura total. No máximo 1 por tela.
+- Ao terminar um componente, confira contra o checklist no fim de docs/DESIGN.md.
 
 ### Estado atual do produto
 
 As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. Não existe camada de dados (nem cliente HTTP, nem tabelas de lotes) além do auth. Qualquer feature de lotes precisa ser construída nas duas pontas.
-
-`docs/` está no `.gitignore` e hoje contém apenas um `RF01-recipes.md` vazio.
