@@ -38,8 +38,8 @@ export default function CardProduct() {
         </View>
 
         <View>
-          <View className="rounded-lg border border-primary-orange bg-[#F8E1CD]">
-            <Text className="px-[6px] py-1 text-[13px] text-primary-orange">
+          <View className="rounded-lg border border-accent-strong bg-accent-soft">
+            <Text className="px-[6px] py-1 text-[13px] text-accent-text">
               3 dias
             </Text>
           </View>

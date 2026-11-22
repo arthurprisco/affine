@@ -1,12 +1,6 @@
-import {
-  Image,
-  Keyboard,
-  Text,
-  Pressable,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { KeyboardScrollView } from "../../../components/KeyboardScrollView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Title from "../../../components/Title";
 import { Input } from "../../../components/Input";
@@ -30,8 +24,11 @@ export function LoginScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="mt-10 h-full w-full items-center p-6">
+      <KeyboardScrollView
+        keyboardShouldPersistTaps="handled" // Fecha o teclado ao tocar fora
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="mt-10 w-full items-center p-6">
           <Image
             source={require("../../../assets/logo-1.png")}
             className="mb-10 h-[160px] w-[160px]"
@@ -65,7 +62,7 @@ export function LoginScreen() {
             {error ? <SpanMessage message={error} type="error" /> : null}
           </View>
 
-          <Text className="w-full py-1 pl-2 text-left text-orange-text-link">
+          <Text className="w-full py-1 pl-2 text-left text-accent-text">
             Esqueceu sua senha?
           </Text>
 
@@ -84,11 +81,11 @@ export function LoginScreen() {
           <View className="flex-row">
             <Text>Não possui conta? </Text>
             <Pressable onPress={() => navigation.navigate("Register")}>
-              <Text className="text-orange-text-link">Crie sua conta</Text>
+              <Text className="text-accent-text">Crie sua conta</Text>
             </Pressable>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </KeyboardScrollView>
     </SafeAreaView>
   );
 }

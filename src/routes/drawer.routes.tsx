@@ -1,10 +1,10 @@
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { NavigatorScreenParams } from "@react-navigation/native";
-import AppRoutes, { AppTabParamList } from "./app.routes";
+import AppRoutes, { AppStackParamList } from "./app.routes";
 import { DrawerContent } from "../components/DrawerContent";
 
 export type DrawerParamList = {
-  Tabs: NavigatorScreenParams<AppTabParamList>;
+  Tabs: NavigatorScreenParams<AppStackParamList>;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();

@@ -162,7 +162,7 @@ export default function Profile() {
             onPress={() => navigation.navigate("EditProfile")}
             className="w-full flex-row items-center justify-center gap-2 rounded-sm border border-line bg-white py-3 active:opacity-70"
           >
-            <Feather name="edit-2" size={16} color={colors.ink} />
+            <Feather name="edit-2" size={16} color={colors.ink.DEFAULT} />
             <Text className="font-body-medium text-sm text-ink">
               Editar perfil
             </Text>
@@ -194,14 +194,14 @@ export default function Profile() {
                     onPress={() => setFrequency(item)}
                     className={
                       active
-                        ? "flex-1 items-center rounded-sm border border-primary-orange bg-primary-orange/20 py-2"
+                        ? "flex-1 items-center rounded-sm border border-accent bg-accent/20 py-2"
                         : "flex-1 items-center rounded-sm border border-line bg-white py-2"
                     }
                   >
                     <Text
                       className={
                         active
-                          ? "font-body text-xs text-orange-text"
+                          ? "font-body text-xs text-on-accent"
                           : "font-body text-xs text-ink/60"
                       }
                     >
@@ -240,10 +240,10 @@ export default function Profile() {
                     setEnabled((current) => ({ ...current, [item.key]: value }))
                   }
                   trackColor={{
-                    false: colors.line,
-                    true: colors["primary-orange"],
+                    false: colors.line.DEFAULT,
+                    true: colors.accent.DEFAULT,
                   }}
-                  ios_backgroundColor={colors.line}
+                  ios_backgroundColor={colors.line.DEFAULT}
                   accessibilityLabel={item.title}
                 />
               </View>
@@ -279,7 +279,7 @@ export default function Profile() {
                         {item.title}
                       </Text>
                       {!item.read && (
-                        <View className="h-2 w-2 rounded-full bg-primary-orange" />
+                        <View className="h-2 w-2 rounded-full bg-accent" />
                       )}
                     </View>
                     <Text className="font-body text-xs text-ink/60">
@@ -294,7 +294,11 @@ export default function Profile() {
               ))
             ) : (
               <View className="items-center gap-1 py-8">
-                <Feather name="bell-off" size={28} color={colors.line} />
+                <Feather
+                  name="bell-off"
+                  size={28}
+                  color={colors.line.DEFAULT}
+                />
                 <Text className="mt-2 font-body-medium text-sm text-ink">
                   Nenhuma notificação ainda
                 </Text>

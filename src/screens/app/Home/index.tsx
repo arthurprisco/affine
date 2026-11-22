@@ -18,21 +18,21 @@ export default function Home() {
               label="CARNES"
               percentage={50} // Define o tamanho do traço azul
               color={colors.primary}
-              trackColor={colors["primary-orange"]}
+              trackColor={colors.accent.DEFAULT}
             />
             <CircularProgress
               value="10"
               label="CARNES"
               percentage={10} // Define o tamanho do traço azul
               color={colors.primary}
-              trackColor={colors["primary-orange"]}
+              trackColor={colors.accent.DEFAULT}
             />
             <CircularProgress
               value="10"
               label="CARNES"
               percentage={10} // Define o tamanho do traço azul
               color={colors.primary}
-              trackColor={colors["primary-orange"]}
+              trackColor={colors.accent.DEFAULT}
             />
           </View>
           <View className="mb-2 mt-4 w-full flex-row justify-between px-2">

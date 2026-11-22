@@ -27,7 +27,7 @@ const VARIANTS = {
     labelColor: "text-on-primary",
     iconBox: "w-5",
     iconSize: 20,
-    iconColor: colors["on-primary"],
+    iconColor: colors.on.primary.DEFAULT,
   },
   footer: {
     container: "flex-row items-center gap-4 px-2 py-3",
@@ -35,11 +35,11 @@ const VARIANTS = {
     labelColor: "text-on-primary-subtle",
     iconBox: "w-[18px]",
     iconSize: 18,
-    iconColor: colors["on-primary-subtle"],
+    iconColor: colors.on.primary.subtle,
   },
 } as const;
 
-const ACTIVE_LABEL = "text-primary-orange font-semibold";
+const ACTIVE_LABEL = "text-accent font-semibold";
 
 export function DrawerItem({
   label,
@@ -52,11 +52,11 @@ export function DrawerItem({
 }: DrawerItemProps) {
   const variantStyles = VARIANTS[variant];
   const isDisabled = disabled || loading;
-  const iconColor = active ? colors["primary-orange"] : variantStyles.iconColor;
+  const iconColor = active ? colors.accent.DEFAULT : variantStyles.iconColor;
 
   return (
     <TouchableOpacity
-      className={`${variantStyles.container} ${active ? "bg-primary-orange/15" : ""}`}
+      className={`${variantStyles.container} ${active ? "bg-accent/15" : ""}`}
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.7}

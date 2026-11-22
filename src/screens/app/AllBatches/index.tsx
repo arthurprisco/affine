@@ -1,7 +1,8 @@
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import Title from "../../../components/Title";
 import { Input } from "../../../components/Input";
 import CardProduct from "../../../components/CardProduct";
+import { KeyboardScrollView } from "../../../components/KeyboardScrollView";
 
 export default function AllBatches() {
   return (
@@ -11,7 +12,10 @@ export default function AllBatches() {
         <View className="mb-6 w-full">
           <Input placeholder="Buscar lote..." />
         </View>
-        <ScrollView className="w-full">
+        <KeyboardScrollView
+          className="w-full"
+          keyboardShouldPersistTaps="handled"
+        >
           <View className="gap-2">
             <CardProduct />
             <CardProduct />
@@ -30,7 +34,7 @@ export default function AllBatches() {
             <CardProduct />
             <CardProduct />
           </View>
-        </ScrollView>
+        </KeyboardScrollView>
       </View>
     </View>
   );

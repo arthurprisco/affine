@@ -28,7 +28,7 @@ export function TabBar({ state, descriptors, navigation }: any) {
         };
 
         // A cor do ícone é passada como valor (prop), não como classe
-        const color = isFocused ? colors["primary-orange"] : "#fff";
+        const color = isFocused ? colors.accent.DEFAULT : "#fff";
 
         const icon = options.tabBarIcon?.({
           color,
@@ -46,7 +46,7 @@ export function TabBar({ state, descriptors, navigation }: any) {
           >
             {icon}
             <Text
-              className={`mt-1 text-xs font-bold ${isFocused ? "text-primary-orange" : "text-white"}`}
+              className={`mt-1 text-xs font-bold ${isFocused ? "text-accent" : "text-white"}`}
             >
               {label}
             </Text>

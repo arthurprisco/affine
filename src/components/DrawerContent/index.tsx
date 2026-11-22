@@ -8,10 +8,9 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cssInterop } from "nativewind";
 import { colors } from "../../shared/colors";
-import type { AppTabParamList } from "../../routes/app.routes";
 import type { DrawerParamList } from "../../routes/drawer.routes";
 import { DrawerItem } from "./DrawerItem";
-import { menuItems } from "./menuItems";
+import { isTabRoute, menuItems, MenuRoute } from "./menuItems";
 import { useSignOut } from "./useSignOut";
 
 // Componente de terceiros: precisa ser registrado para aceitar className.
@@ -21,16 +20,20 @@ const DrawerScrollView = cssInterop(DrawerContentScrollView, {
 });
 
 /**
- * O estado do drawer contém apenas a rota "Tabs" — o nome da tab ativa está no
- * estado aninhado do bottom-tabs, que só existe depois da primeira navegação.
+ * Estado aninhado: Drawer ("Tabs") → Stack (AppTabs | Recipes | ...) →
+ * bottom-tabs. Os estados aninhados só existem depois da primeira navegação,
+ * por isso os fallbacks apontam para a rota inicial ("Home").
  */
-function getActiveTabRoute(
-  state: DrawerContentComponentProps["state"],
-): keyof AppTabParamList {
-  const nestedState = state.routes[state.index]?.state;
-  const activeName = nestedState?.routes[nestedState.index ?? 0]?.name;
+function getActiveRoute(state: DrawerContentComponentProps["state"]): string {
+  const stackState = state.routes[state.index]?.state;
+  const stackRoute = stackState?.routes[stackState.index ?? 0];
 
-  return (activeName as keyof AppTabParamList) ?? "Home";
+  if (!stackRoute || stackRoute.name === "AppTabs") {
+    const tabState = stackRoute?.state;
+    return tabState?.routes[tabState.index ?? 0]?.name ?? "Home";
+  }
+
+  return stackRoute.name;
 }
 
 export function DrawerContent(props: DrawerContentComponentProps) {
@@ -41,11 +44,18 @@ export function DrawerContent(props: DrawerContentComponentProps) {
   const navigation =
     props.navigation as unknown as DrawerNavigationProp<DrawerParamList>;
 
-  const activeRoute = getActiveTabRoute(props.state);
+  const activeRoute = getActiveRoute(props.state);
   const { isSigningOut, confirmSignOut } = useSignOut(navigation.closeDrawer);
 
-  function navigate(route: keyof AppTabParamList) {
-    navigation.navigate("Tabs", { screen: route });
+  function navigate(route: MenuRoute) {
+    if (isTabRoute(route)) {
+      navigation.navigate("Tabs", {
+        screen: "AppTabs",
+        params: { screen: route },
+      });
+    } else {
+      navigation.navigate("Tabs", { screen: route });
+    }
     navigation.closeDrawer();
   }
 
@@ -64,8 +74,8 @@ export function DrawerContent(props: DrawerContentComponentProps) {
         style={{ paddingTop: insets.top + 16 }}
       >
         <View className="mb-6 border-b border-on-primary-faint pb-8 pt-4">
-          <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-primary-orange">
-            <Feather name="layers" size={24} color={colors["orange-text"]} />
+          <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-accent">
+            <Feather name="layers" size={24} color={colors.on.accent} />
           </View>
           <Text className="text-[22px] font-bold tracking-[1px] text-white">
             Affine
