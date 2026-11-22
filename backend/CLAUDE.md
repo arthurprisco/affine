@@ -9,7 +9,7 @@ Todos executados dentro de `backend/`:
 ```bash
 npm install
 npm run dev            # sobe o Postgres (services:up) + node --watch src/server.ts → http://localhost:3000
-npm run services:up    # docker compose -f infra/docker-compose.yaml up -d
+npm run services:up    # docker compose -f infra/docker-compose.yaml up -d --wait
 npm run services:stop  # para o container (dados mantidos no volume pgdata)
 npm run services:down  # remove o container
 
@@ -24,7 +24,7 @@ Node **22.18+ ou 24 LTS** é requisito rígido: o backend executa `.ts` direto v
 
 ## Banco de dados (Docker)
 
-O Postgres de desenvolvimento roda em Docker (`infra/docker-compose.yaml`, imagem `postgres:17`, container `postgres-dev`, porta 5432, volume `pgdata`). O compose lê `.env` via `env_file`. Não há healthcheck: `npm run dev` pode iniciar o servidor antes de o banco aceitar conexões.
+O Postgres de desenvolvimento roda em Docker (`infra/docker-compose.yaml`, imagem `postgres:17`, container `postgres-dev`, porta 5432, volume `pgdata`). O compose lê `.env` via `env_file` e tem healthcheck (`pg_isready`). `services:up` usa `up -d --wait`, então `npm run dev` só inicia o servidor depois que o banco aceita conexões.
 
 ## Variáveis de ambiente (`.env`)
 
