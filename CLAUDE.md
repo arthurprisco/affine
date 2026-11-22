@@ -19,7 +19,7 @@ npm run web
 
 Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm run dev` + `npm start` na raiz).
 
-**Não existe setup de testes nem de lint** neste repositório — não invente comandos de `test`/`lint`. A única ferramenta de formatação é o Prettier com `prettier-plugin-tailwindcss` (`.prettierrc`), que ordena as classes NativeWind.
+**Testes existem só no backend** (`cd backend && npm test`, Jest — ver `backend/CLAUDE.md`). O app mobile não tem testes, e **não há lint** em nenhum dos dois — não invente comandos de `lint` nem de testes para o app. A única ferramenta de formatação é o Prettier com `prettier-plugin-tailwindcss` (`.prettierrc`), que ordena as classes NativeWind.
 
 ## Variáveis de ambiente
 
@@ -29,7 +29,7 @@ Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm 
 
 ### Backend
 
-Hoje é só autenticação (Better Auth + Drizzle + Postgres), sem rotas de domínio. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
+Autenticação (Better Auth + Drizzle + Postgres) e as tabelas de domínio (receitas, etapas, lotes) com seed, mas ainda sem rotas de domínio. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
 
 ### App mobile — navegação em três camadas
 
@@ -61,4 +61,4 @@ Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
 ### Estado atual do produto
 
-As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. Não existe camada de dados (nem cliente HTTP, nem tabelas de lotes) além do auth. Qualquer feature de lotes precisa ser construída nas duas pontas.
+As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. O backend já tem as tabelas de lotes e um seed, mas não há rotas de domínio nem cliente HTTP no app. Qualquer feature de lotes precisa ser construída nas duas pontas.

@@ -7,7 +7,12 @@
     "dev": "npm run services:up && node --watch src/server.ts",
     "services:up": "docker compose -f infra/docker-compose.yaml up -d --wait",
     "services:stop": "docker compose -f infra/docker-compose.yaml stop",
-    "services:down": "docker compose -f infra/docker-compose.yaml down"
+    "services:down": "docker compose -f infra/docker-compose.yaml down",
+    "test": "npm run services:up && NODE_OPTIONS=\"--experimental-vm-modules --no-warnings=ExperimentalWarning\" jest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node src/db/seed.ts",
+    "db:reset": "npm run services:up && node src/db/reset.ts && npm run db:migrate && npm run db:seed"
   },
   "keywords": [],
   "author": "",
@@ -23,11 +28,16 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
+    "@swc/core": "^1.16.22",
+    "@swc/jest": "^0.2.39",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.3",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
     "drizzle-kit": "^1.0.0-rc.4",
+    "jest": "^30.5.2",
+    "supertest": "^7.3.2",
     "typescript": "^7.0.2"
   }
 }
