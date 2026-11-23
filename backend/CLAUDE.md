@@ -75,12 +75,12 @@ Peças compartilhadas:
 |---|---|---|
 | GET | `/` | só as ativas; `?archived=true` lista só as arquivadas. Ordem alfabética, com `steps` |
 | GET | `/:id` | receita com `steps` ordenadas por `position` |
-| POST | `/` | `{ name, category, description?, shelfLifeDays, steps: [{ name, durationDays, description? }] }` → 201 |
+| POST | `/` | `{ name, category, description?, steps: [{ name, duration, durationUnit, description? }] }` → 201 |
 | PUT | `/:id` | mesmo corpo do POST; **substitui** a receita e todas as etapas |
 | PATCH | `/:id/archive`, `/:id/unarchive` | preenche ou limpa `archivedAt` |
 | DELETE | `/:id` | 204; **409 `RECIPE_HAS_BATCHES`** se houver lotes (o cliente deve arquivar) |
 
-`maturationDays` é sempre calculado no service como a soma das `durationDays` (se o cliente enviar, é ignorado), e `position` segue a ordem do array `steps`.
+`maturationDays` é sempre calculado no service: a soma das etapas convertida em dias e **arredondada para cima** (`totalDays()` de `src/shared/duration.ts`; se o cliente enviar o campo, ele é ignorado). `position` segue a ordem do array `steps`.
 
 Detalhes que não são óbvios:
 
@@ -93,9 +93,9 @@ Detalhes que não são óbvios:
 
 `user` 1─N `recipe` 1─N `step`; `user` 1─N `batch` N─1 `recipe`; `batch` 1─N `batch_step` N─0..1 `step`.
 
-- **recipe**: receita de produto; `maturation_days` (soma das etapas) e `shelf_life_days` (validade depois de pronto). Com lotes ela não pode ser apagada (`batch.recipe_id` é `ON DELETE RESTRICT`): use `archived_at`.
-- **step**: etapa-modelo da receita, ordenada por `position` (único por receita).
+- **recipe**: receita de produto, com `maturation_days` (soma das etapas em dias, arredondada para cima). A receita **não guarda validade**: o vencimento é definido por lote (`batch.expiration_date`). Com lotes ela não pode ser apagada (`batch.recipe_id` é `ON DELETE RESTRICT`): use `archived_at`.
+- **step**: etapa-modelo da receita, ordenada por `position` (único por receita). A duração é `duration` (inteiro ≥ 1) + `duration_unit` (enum pg `duration_unit`: minutos, horas, dias, semanas, meses, anos). As unidades e os fatores de conversão (mês = 30 dias, ano = 365) ficam em `src/shared/duration.ts` e **precisam ficar iguais aos de `src/shared/duration.ts` do app**.
 - **batch**: lote; `code` único por usuário, `quantity` numeric + `unit`, `start_date`, `expiration_date`. Tem `user_id` próprio (para filtrar por sessão sem join), então ao criar um lote é preciso **validar que a receita pertence ao mesmo usuário** — o banco não garante isso.
-- **batch_step**: etapa executada do lote. Ao criar o lote, **copie** `position`/`name`/`duration_days` da etapa-modelo (em vez de só referenciar `step_id`, que vira `null` se a etapa for apagada); assim editar a receita não altera o histórico. `planned_date` = fim acumulado das durações a partir de `start_date`; `completed_at` nulo = pendente.
+- **batch_step**: etapa executada do lote. Ao criar o lote, **copie** `position`/`name`/`duration`/`duration_unit` da etapa-modelo (em vez de só referenciar `step_id`, que vira `null` se a etapa for apagada); assim editar a receita não altera o histórico. `planned_date` = dia em que a etapa termina, pelo tempo acumulado desde `start_date` (`totalDays` das etapas até ela; etapas de minutos/horas terminam no mesmo dia ou no seguinte); `completed_at` nulo = pendente.
 - **Não existe coluna de status**: planejado/em produção/maturando/pronto/vencido/atrasado são derivados de `batch_step` + `expiration_date` + data atual.
 - Datas de calendário usam `date` com `mode: "string"` (`YYYY-MM-DD`); ids são `text` com `crypto.randomUUID()`.

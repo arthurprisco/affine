@@ -61,4 +61,12 @@ Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
 ### Estado atual do produto
 
-As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. O backend já tem as tabelas, o seed e os endpoints de receitas, mas ainda não tem rotas de lotes, e o app não tem cliente HTTP. Qualquer feature de lotes precisa ser construída nas duas pontas.
+As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. As telas de receitas (`Recipes`, `NewRecipe`) já usam a API de verdade. O backend ainda não tem rotas de lotes, então qualquer feature de lotes precisa ser construída nas duas pontas.
+
+### Dados da API no app
+
+- `src/lib/api.ts`: `api<T>(path, { method, body })` chama `EXPO_PUBLIC_API_URL` com o cookie de sessão (`await authClient.getCookie()` no header `Cookie`, `credentials: "omit"`). Respostas não-2xx viram `ApiError` (`status`, `code`, `issues`, `message` em pt-BR vinda do backend), e `errorMessage(error, fallback)` gera o texto para a UI, inclusive para falta de rede. Use `api()` só para `/api/...` de domínio; auth continua no `authClient`.
+- **TanStack Query** para tudo que vem da API. Cada recurso tem um módulo em `src/api/` (referência: `src/api/recipes.ts`) com os tipos da resposta, um objeto de query keys e hooks `useX()` (`useQuery`) / `useCreateX()` (`useMutation` que invalida as keys do recurso no `onSuccess`). As telas não chamam `api()` direto.
+- O `QueryClientProvider` fica em `AppRoutes` (`src/routes/app.routes.tsx`), dentro da árvore logada: ao sair da conta ele é desmontado junto com o cache, então dados de um usuário nunca aparecem para o próximo. Não mova para o `App.tsx`.
+- Telas de lista tratam os três estados no `ListEmptyComponent` (carregando, erro com "Tentar novamente", vazio) e têm `RefreshControl`. Formulários usam `Button loading={mutation.isPending}` e mostram o erro da API com `SpanMessage`.
+- Duração de etapa = `duration` + `durationUnit` (`src/shared/duration.ts`). As unidades e os fatores precisam bater com `backend/src/shared/duration.ts`.

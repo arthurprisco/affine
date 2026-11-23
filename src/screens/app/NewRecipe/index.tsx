@@ -8,7 +8,8 @@ import { Chip } from "../../../components/Chip";
 import { AddButton } from "../../../components/AddButton";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { SortableList } from "../../../components/SortableList";
-import { RECIPE_CATEGORIES } from "../../../contexts/RecipesContext";
+import { RECIPE_CATEGORIES } from "../../../api/recipes";
+import { SpanMessage } from "../../../components/SpanMessage";
 import { KeyboardScrollView } from "../../../components/KeyboardScrollView";
 import { useNewRecipeForm } from "./useNewRecipeForm";
 import { StepCard } from "./StepCard";
@@ -137,7 +138,17 @@ export default function NewRecipe() {
           </Field>
         </View>
 
-        <Button label="Salvar receita" onPress={form.submit} />
+        {form.submitError && (
+          <View className="mt-6">
+            <SpanMessage type="error" message={form.submitError} />
+          </View>
+        )}
+
+        <Button
+          label="Salvar receita"
+          onPress={form.submit}
+          loading={form.saving}
+        />
 
         <ConfirmDialog
           visible={stepToDelete !== null}

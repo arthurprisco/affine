@@ -8,7 +8,8 @@ import Profile from "../screens/app/Profile";
 import EditProfile from "../screens/app/EditProfile";
 import Recipes from "../screens/app/Recipes";
 import NewRecipe from "../screens/app/NewRecipe";
-import { RecipesProvider } from "../contexts/RecipesContext";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigatorScreenParams } from "@react-navigation/native";
@@ -93,9 +94,12 @@ function AppTabs() {
 }
 
 export default function AppRoutes() {
-  // Provider acima do stack: Recipes e NewRecipe compartilham a mesma lista.
+  // Cliente criado aqui (só na árvore logada): ao sair da conta ele é desmontado
+  // junto com o cache, e o próximo usuário nunca vê dados do anterior.
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
-    <RecipesProvider>
+    <QueryClientProvider client={queryClient}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="AppTabs" component={AppTabs} />
         <Stack.Screen name="EditProfile" component={EditProfile} />
@@ -116,6 +120,6 @@ export default function AppRoutes() {
           }}
         />
       </Stack.Navigator>
-    </RecipesProvider>
+    </QueryClientProvider>
   );
 }

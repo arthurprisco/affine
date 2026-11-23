@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Title from "../../../components/Title";
 import { Input } from "../../../components/Input";
@@ -8,7 +15,8 @@ import { useNavigation } from "@react-navigation/native";
 import { KeyboardScrollView } from "../../../components/KeyboardScrollView";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "../../../shared/colors";
-import { Recipe, useRecipes } from "../../../contexts/RecipesContext";
+import { Recipe, useRecipes } from "../../../api/recipes";
+import { errorMessage } from "../../../lib/api";
 import type { AppStackParamList } from "../../../routes/app.routes";
 import { formatTotalDuration, toMinutes } from "../../../shared/duration";
 
@@ -47,7 +55,13 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
 export default function Recipes() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  const { recipes } = useRecipes();
+  const {
+    data: recipes = [],
+    isPending,
+    error,
+    refetch,
+    isRefetching,
+  } = useRecipes();
   const [search, setSearch] = useState("");
 
   const filteredRecipes = useMemo(() => {
@@ -100,13 +114,49 @@ export default function Recipes() {
         contentContainerClassName="gap-2 pb-6"
         keyboardShouldPersistTaps="handled"
         renderScrollComponent={(props) => <KeyboardScrollView {...props} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => void refetch()}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
         ListEmptyComponent={
-          <View className="items-center gap-2 py-10">
-            <Feather name="search" size={28} color={colors.line.DEFAULT} />
-            <Text className="font-body text-sm text-ink-muted">
-              Nenhuma receita encontrada
-            </Text>
-          </View>
+          isPending ? (
+            <View className="items-center py-10">
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : error ? (
+            <View className="items-center gap-2 py-10">
+              <Feather name="wifi-off" size={28} color={colors.line.DEFAULT} />
+              <Text className="text-center font-body text-sm text-ink-muted">
+                {errorMessage(error, "Não foi possível carregar as receitas.")}
+              </Text>
+              <Pressable
+                onPress={() => refetch()}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <Text className="font-body-medium text-sm text-accent-text">
+                  Tentar novamente
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View className="items-center gap-2 py-10">
+              <Feather
+                name={search ? "search" : "book-open"}
+                size={28}
+                color={colors.line.DEFAULT}
+              />
+              <Text className="font-body text-sm text-ink-muted">
+                {search
+                  ? "Nenhuma receita encontrada"
+                  : "Você ainda não tem receitas"}
+              </Text>
+            </View>
+          )
         }
       />
     </View>

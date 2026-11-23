@@ -11,11 +11,10 @@ const canastra = {
   name: "Queijo Canastra",
   category: "queijo",
   description: "Leite cru, casca amarelada.",
-  shelfLifeDays: 60,
   steps: [
-    { name: "Coagulação", durationDays: 1 },
-    { name: "Salga a seco", durationDays: 2 },
-    { name: "Maturação", durationDays: 19, description: "Viragem diária." },
+    { name: "Coagulação", duration: 1, durationUnit: "dias" },
+    { name: "Salga a seco", duration: 2, durationUnit: "dias" },
+    { name: "Maturação", duration: 19, durationUnit: "dias", description: "Viragem diária." },
   ],
 };
 
@@ -52,7 +51,6 @@ describe("POST /api/recipes", () => {
     expect(recipe).toMatchObject({
       name: "Queijo Canastra",
       category: "queijo",
-      shelfLifeDays: 60,
       maturationDays: 22,
       archivedAt: null,
       userId,
@@ -64,6 +62,22 @@ describe("POST /api/recipes", () => {
     ]);
   });
 
+  it("guarda a unidade e arredonda a maturação para cima em dias", async () => {
+    const { agent } = await signedUpAgent();
+    const recipe = await createRecipe(agent, {
+      ...canastra,
+      steps: [
+        { name: "Aquecer o leite", duration: 30, durationUnit: "minutos" },
+        { name: "Prensar", duration: 12, durationUnit: "horas" },
+        { name: "Salmoura", duration: 2, durationUnit: "semanas" },
+      ],
+    });
+
+    // 30 min + 12 h + 14 dias = 14 dias e 12h30 → 15 dias
+    expect(recipe.maturationDays).toBe(15);
+    expect(recipe.steps[0]).toMatchObject({ duration: 30, durationUnit: "minutos" });
+  });
+
   it("ignora maturationDays enviado pelo cliente", async () => {
     const { agent } = await signedUpAgent();
     const recipe = await createRecipe(agent, { ...canastra, maturationDays: 999 });
@@ -73,8 +87,10 @@ describe("POST /api/recipes", () => {
   it.each([
     ["sem etapas", { ...canastra, steps: [] }],
     ["sem nome", { ...canastra, name: "  " }],
-    ["validade não inteira", { ...canastra, shelfLifeDays: 1.5 }],
-    ["etapa com duração zero", { ...canastra, steps: [{ name: "X", durationDays: 0 }] }],
+    ["duração não inteira", { ...canastra, steps: [{ name: "X", duration: 1.5, durationUnit: "dias" }] }],
+    ["etapa com duração zero", { ...canastra, steps: [{ name: "X", duration: 0, durationUnit: "dias" }] }],
+    ["unidade inválida", { ...canastra, steps: [{ name: "X", duration: 1, durationUnit: "décadas" }] }],
+    ["etapa sem unidade", { ...canastra, steps: [{ name: "X", duration: 1 }] }],
   ])("recusa %s → 400", async (_caso, body) => {
     const { agent } = await signedUpAgent();
     const res = await agent.post("/api/recipes").send(body);
@@ -159,10 +175,9 @@ describe("PUT /api/recipes/:id", () => {
     const res = await agent.put(`/api/recipes/${created.id}`).send({
       name: "Canastra Real",
       category: "queijo",
-      shelfLifeDays: 90,
       steps: [
-        { name: "Coagulação", durationDays: 1 },
-        { name: "Maturação longa", durationDays: 40 },
+        { name: "Coagulação", duration: 1, durationUnit: "dias" },
+        { name: "Maturação longa", duration: 40, durationUnit: "dias" },
       ],
     });
 
@@ -171,7 +186,6 @@ describe("PUT /api/recipes/:id", () => {
       id: created.id,
       name: "Canastra Real",
       description: null,
-      shelfLifeDays: 90,
       maturationDays: 41,
     });
     expect(res.body.steps.map((s: { name: string }) => s.name)).toEqual([

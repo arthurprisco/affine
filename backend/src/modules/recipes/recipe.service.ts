@@ -3,6 +3,7 @@
 import { AppError, notFound } from "../../errors/app-error.ts";
 import * as RecipeModel from "./recipe.model.ts";
 import type { RecipeInput } from "./recipe.schemas.ts";
+import { totalDays } from "../../shared/duration.ts";
 
 const recipeNotFound = () => notFound("Receita não encontrada.");
 
@@ -11,7 +12,8 @@ function toRows(input: RecipeInput) {
   const steps = input.steps.map((s, i) => ({
     position: i + 1,
     name: s.name,
-    durationDays: s.durationDays,
+    duration: s.duration,
+    durationUnit: s.durationUnit,
     description: s.description ?? null,
   }));
 
@@ -20,9 +22,8 @@ function toRows(input: RecipeInput) {
       name: input.name,
       category: input.category,
       description: input.description ?? null,
-      shelfLifeDays: input.shelfLifeDays,
-      // a maturação é sempre a soma das etapas; o cliente não envia
-      maturationDays: steps.reduce((sum, s) => sum + s.durationDays, 0),
+      // a maturação é sempre a soma das etapas em dias (arredondada para cima); o cliente não envia
+      maturationDays: totalDays(steps),
     },
     steps,
   };

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { NewRecipe, Step, useRecipes } from "../../../contexts/RecipesContext";
+import { RecipeInput, useCreateRecipe } from "../../../api/recipes";
+import { errorMessage } from "../../../lib/api";
 import { DurationUnit } from "../../../shared/duration";
 
 /** Etapa em edição: a duração ainda é o texto digitado no campo. */
@@ -26,7 +27,7 @@ export type FormErrors = {
 const DEFAULT_UNIT: DurationUnit = "dias";
 
 export function useNewRecipeForm(onSaved: () => void) {
-  const { addRecipe } = useRecipes();
+  const createRecipe = useCreateRecipe();
 
   // Ids locais estáveis para os cards de etapa (usados como `key`).
   const nextId = useRef(1);
@@ -74,7 +75,7 @@ export function useNewRecipeForm(onSaved: () => void) {
     });
   }
 
-  function validate(): NewRecipe | null {
+  function validate(): RecipeInput | null {
     const nextErrors: FormErrors = {};
     const stepFields: Record<string, StepErrors> = {};
 
@@ -93,7 +94,7 @@ export function useNewRecipeForm(onSaved: () => void) {
       }))
       .filter((item) => item.name || item.description || item.duration);
 
-    const validSteps: Step[] = [];
+    const validSteps: RecipeInput["steps"] = [];
     for (const item of filledSteps) {
       const fieldErrors: StepErrors = {};
       if (!item.name) fieldErrors.name = "Informe o nome da etapa.";
@@ -107,7 +108,6 @@ export function useNewRecipeForm(onSaved: () => void) {
         stepFields[item.id] = fieldErrors;
       } else {
         validSteps.push({
-          id: item.id,
           name: item.name,
           description: item.description || undefined,
           duration,
@@ -132,11 +132,17 @@ export function useNewRecipeForm(onSaved: () => void) {
     };
   }
 
-  function submit() {
+  async function submit() {
+    if (createRecipe.isPending) return false;
     const recipe = validate();
     if (!recipe) return false;
 
-    addRecipe(recipe);
+    try {
+      await createRecipe.mutateAsync(recipe);
+    } catch {
+      // a mensagem aparece via `submitError`
+      return false;
+    }
     onSaved();
     return true;
   }
@@ -153,5 +159,9 @@ export function useNewRecipeForm(onSaved: () => void) {
     moveStep,
     errors,
     submit,
+    saving: createRecipe.isPending,
+    submitError: createRecipe.error
+      ? errorMessage(createRecipe.error, "Não foi possível salvar a receita.")
+      : null,
   };
 }

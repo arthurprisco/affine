@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { DURATION_UNITS } from "../../shared/duration.ts";
 
 const text = z.string().trim().min(1, "Obrigatório.");
-const days = z.number().int("Deve ser um número inteiro.").min(1, "Mínimo de 1 dia.");
+const positiveInt = z.number().int("Deve ser um número inteiro.").min(1, "Mínimo de 1.");
 
 export const stepInputSchema = z.object({
   name: text,
-  durationDays: days,
+  duration: positiveInt,
+  durationUnit: z.enum(DURATION_UNITS),
   description: text.nullish(),
 });
 
@@ -14,7 +16,6 @@ export const recipeInputSchema = z.object({
   name: text,
   category: text,
   description: text.nullish(),
-  shelfLifeDays: days,
   steps: z.array(stepInputSchema).min(1, "A receita precisa de pelo menos uma etapa."),
 });
 

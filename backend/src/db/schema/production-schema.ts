@@ -1,4 +1,5 @@
 import {
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -9,6 +10,9 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema.ts";
+import { DURATION_UNITS } from "../../shared/duration.ts";
+
+export const durationUnit = pgEnum("duration_unit", DURATION_UNITS);
 
 const id = () =>
   text("id")
@@ -23,7 +27,10 @@ const timestamps = {
     .notNull(),
 };
 
-/** Receita de produto (ex.: Queijo Canastra). Com lotes, é arquivada em vez de apagada. */
+/**
+ * Receita de produto (ex.: Queijo Canastra). Com lotes, é arquivada em vez de apagada.
+ * `maturation_days` = soma das etapas convertida em dias, arredondada para cima.
+ */
 export const recipe = pgTable(
   "recipe",
   {
@@ -35,7 +42,6 @@ export const recipe = pgTable(
     category: text("category").notNull(),
     description: text("description"),
     maturationDays: integer("maturation_days").notNull(),
-    shelfLifeDays: integer("shelf_life_days").notNull(),
     archivedAt: timestamp("archived_at"),
     ...timestamps,
   },
@@ -52,7 +58,8 @@ export const step = pgTable(
       .references(() => recipe.id, { onDelete: "cascade" }),
     position: integer("position").notNull(),
     name: text("name").notNull(),
-    durationDays: integer("duration_days").notNull(),
+    duration: integer("duration").notNull(),
+    durationUnit: durationUnit("duration_unit").notNull(),
     description: text("description"),
   },
   (table) => [unique("step_recipe_position_uq").on(table.recipeId, table.position)],
@@ -85,7 +92,7 @@ export const batch = pgTable(
 );
 
 /**
- * Etapa executada de um lote. Copia nome/ordem/duração da etapa-modelo na criação
+ * Etapa executada de um lote. Copia nome/ordem/duração (+ unidade) da etapa-modelo na criação
  * do lote, para que editar a receita não altere o histórico.
  */
 export const batchStep = pgTable(
@@ -98,7 +105,8 @@ export const batchStep = pgTable(
     stepId: text("step_id").references(() => step.id, { onDelete: "set null" }),
     position: integer("position").notNull(),
     name: text("name").notNull(),
-    durationDays: integer("duration_days").notNull(),
+    duration: integer("duration").notNull(),
+    durationUnit: durationUnit("duration_unit").notNull(),
     plannedDate: date("planned_date", { mode: "string" }).notNull(),
     completedAt: date("completed_at", { mode: "string" }),
     notes: text("notes"),

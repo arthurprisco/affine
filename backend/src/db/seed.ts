@@ -4,6 +4,7 @@
 import { auth } from "../../auth.ts";
 import { db } from "./index.ts";
 import { recipe, step, batch, batchStep } from "./schema/production-schema.ts";
+import { totalDays, type DurationUnit } from "../shared/duration.ts";
 
 const PASSWORD = "affine123";
 
@@ -36,13 +37,16 @@ const YEAR = today.getFullYear();
 
 // ---------- dados ----------
 
+type StepSeed = [name: string, duration: number, unit: DurationUnit];
+
 type RecipeSeed = {
   key: string;
   name: string;
   category: string;
-  description: string;
+  description?: string;
+  /** Só para calcular o vencimento dos lotes; a receita não guarda validade. */
   shelfLifeDays: number;
-  steps: { name: string; durationDays: number; description?: string }[];
+  steps: StepSeed[];
 };
 
 type BatchSeed = {
@@ -53,103 +57,109 @@ type BatchSeed = {
   /** Início do lote em dias a partir de hoje (negativo = passado). */
   startOffset: number;
   notes?: string;
-  /** Deixa a primeira etapa vencida sem concluir, simulando atraso. */
+  /** Deixa a última etapa já vencida (e as seguintes) sem concluir, simulando atraso. */
   delayed?: boolean;
 };
 
+// Mesmas receitas da antiga maquete do app (RecipesContext).
 const demoRecipes: RecipeSeed[] = [
   {
     key: "canastra",
     name: "Queijo Canastra",
-    category: "queijo",
+    category: "Queijo",
     description: "Queijo de leite cru da Serra da Canastra, casca amarelada.",
     shelfLifeDays: 60,
     steps: [
-      { name: "Coagulação", durationDays: 1 },
-      { name: "Enformagem e prensagem", durationDays: 1 },
-      { name: "Salga a seco", durationDays: 2 },
-      { name: "Viragem diária", durationDays: 10 },
-      { name: "Maturação final", durationDays: 8 },
+      ["Aquecer o leite a 35 °C", 30, "minutos"],
+      ["Adicionar pingo e coalho", 40, "minutos"],
+      ["Cortar a coalhada", 15, "minutos"],
+      ["Enformar e prensar", 12, "horas"],
+      ["Salgar e maturar", 22, "dias"],
     ],
   },
   {
-    key: "gouda",
-    name: "Queijo Gouda",
-    category: "queijo",
-    description: "Massa lavada, parafinado, sabor amanteigado.",
-    shelfLifeDays: 90,
+    key: "minas",
+    name: "Queijo Minas Padrão",
+    category: "Queijo",
+    shelfLifeDays: 45,
     steps: [
-      { name: "Coagulação", durationDays: 1 },
-      { name: "Prensagem", durationDays: 1 },
-      { name: "Salmoura", durationDays: 3 },
-      { name: "Secagem", durationDays: 5 },
-      { name: "Parafinação", durationDays: 1 },
-      { name: "Maturação", durationDays: 34 },
+      ["Pasteurizar o leite", 30, "minutos"],
+      ["Coagular", 45, "minutos"],
+      ["Enformar", 2, "horas"],
+      ["Maturar", 20, "dias"],
     ],
   },
   {
     key: "parmesao",
-    name: "Queijo Parmesão",
-    category: "queijo",
+    name: "Parmesão Artesanal",
+    category: "Queijo",
     description: "Massa cozida e prensada, maturação longa.",
     shelfLifeDays: 365,
     steps: [
-      { name: "Coagulação", durationDays: 1 },
-      { name: "Cozimento da massa", durationDays: 1 },
-      { name: "Prensagem", durationDays: 2 },
-      { name: "Salmoura", durationDays: 20 },
-      { name: "Viragem semanal", durationDays: 30 },
-      { name: "Maturação", durationDays: 120 },
-      { name: "Limpeza e embalagem", durationDays: 6 },
+      ["Coagular", 30, "minutos"],
+      ["Cozinhar a massa", 1, "horas"],
+      ["Prensar", 1, "dias"],
+      ["Salmoura", 2, "semanas"],
+      ["Maturar", 6, "meses"],
+      ["Virar periodicamente", 6, "meses"],
     ],
   },
   {
     key: "tinto",
     name: "Vinho Tinto Seco",
-    category: "vinho",
+    category: "Vinho",
     description: "Corte de Cabernet Sauvignon e Merlot.",
     shelfLifeDays: 730,
     steps: [
-      { name: "Desengace e esmagamento", durationDays: 1 },
-      { name: "Fermentação alcoólica", durationDays: 10 },
-      { name: "Prensagem", durationDays: 1 },
-      { name: "Fermentação malolática", durationDays: 28 },
-      { name: "Trasfega", durationDays: 2 },
-      { name: "Estágio em barrica", durationDays: 70 },
-      { name: "Engarrafamento", durationDays: 8 },
+      ["Desengaçar e esmagar", 3, "horas"],
+      ["Fermentar", 2, "semanas"],
+      ["Prensar", 1, "dias"],
+      ["Envelhecer", 1, "anos"],
+    ],
+  },
+  {
+    key: "rose",
+    name: "Vinho Rosé",
+    category: "Vinho",
+    shelfLifeDays: 365,
+    steps: [
+      ["Esmagar", 2, "horas"],
+      ["Maceração curta", 12, "horas"],
+      ["Fermentar", 3, "semanas"],
+      ["Engarrafar", 1, "dias"],
     ],
   },
 ];
 
 const demoBatches: BatchSeed[] = [
-  // Canastra: 22 dias de maturação + 60 de validade
+  // Canastra: 23 dias de maturação + 60 de validade
   { recipeKey: "canastra", code: "QJ101", quantity: 20, unit: "unidades", startOffset: -70 }, // pronto
   { recipeKey: "canastra", code: "QJ102", quantity: 20, unit: "unidades", startOffset: -20 }, // maturando, quase pronto
-  { recipeKey: "canastra", code: "QJ103", quantity: 12, unit: "unidades", startOffset: -78, notes: "Vender primeiro." }, // vence em 4 dias
+  { recipeKey: "canastra", code: "QJ103", quantity: 12, unit: "unidades", startOffset: -79, notes: "Vender primeiro." }, // vence em 4 dias
   { recipeKey: "canastra", code: "QJ104", quantity: 25, unit: "unidades", startOffset: 5 }, // planejado
   { recipeKey: "canastra", code: "QJ105", quantity: 18, unit: "unidades", startOffset: 0 }, // começa hoje
-  // Gouda: 45 + 90
-  { recipeKey: "gouda", code: "GD201", quantity: 15, unit: "unidades", startOffset: -30 }, // maturando
-  { recipeKey: "gouda", code: "GD202", quantity: 8, unit: "unidades", startOffset: -140 }, // vencido
-  { recipeKey: "gouda", code: "GD203", quantity: 10, unit: "unidades", startOffset: -10, delayed: true, notes: "Salmoura atrasada." }, // atrasado
-  // Parmesão: 180 + 365
+  // Minas Padrão: 21 + 45
+  { recipeKey: "minas", code: "MP201", quantity: 15, unit: "unidades", startOffset: -30 }, // pronto
+  { recipeKey: "minas", code: "MP202", quantity: 8, unit: "unidades", startOffset: -70 }, // vencido
+  { recipeKey: "minas", code: "MP203", quantity: 10, unit: "unidades", startOffset: -10, delayed: true, notes: "Enformagem atrasada." }, // atrasado
+  // Parmesão: 376 + 365
   { recipeKey: "parmesao", code: "PR301", quantity: 6, unit: "unidades", startOffset: -100 }, // maturando
   { recipeKey: "parmesao", code: "PR302", quantity: 6, unit: "unidades", startOffset: -2 }, // em produção
-  // Vinho tinto: 120 + 730
-  { recipeKey: "tinto", code: "VT401", quantity: 220, unit: "L", startOffset: -60 }, // em estágio
-  { recipeKey: "tinto", code: "VT402", quantity: 180, unit: "L", startOffset: -125 }, // pronto
+  // Vinhos
+  { recipeKey: "tinto", code: "VT401", quantity: 220, unit: "L", startOffset: -60 }, // envelhecendo
+  { recipeKey: "rose", code: "VR402", quantity: 180, unit: "L", startOffset: -40 }, // pronto
 ];
 
 const otherRecipes: RecipeSeed[] = [
   {
     key: "frescal",
     name: "Queijo Minas Frescal",
-    category: "queijo",
+    category: "Queijo",
     description: "Queijo fresco, sem maturação.",
     shelfLifeDays: 10,
     steps: [
-      { name: "Coagulação", durationDays: 1 },
-      { name: "Salga e embalagem", durationDays: 1 },
+      ["Coagular", 40, "minutos"],
+      ["Salgar e embalar", 2, "horas"],
     ],
   },
 ];
@@ -176,64 +186,71 @@ async function seedUserData(
   recipes: RecipeSeed[],
   batches: BatchSeed[],
 ) {
-  const recipeIds = new Map<string, string>();
-  const recipeSteps = new Map<string, (typeof step.$inferSelect)[]>();
-  const maturation = new Map<string, number>();
-  const shelfLife = new Map<string, number>();
+  const byKey = new Map<
+    string,
+    { id: string; maturationDays: number; shelfLifeDays: number; steps: (typeof step.$inferSelect)[] }
+  >();
 
   for (const r of recipes) {
-    const maturationDays = r.steps.reduce((sum, s) => sum + s.durationDays, 0);
+    const stepRows = r.steps.map(([name, duration, durationUnit], i) => ({
+      position: i + 1,
+      name,
+      duration,
+      durationUnit,
+    }));
+    const maturationDays = totalDays(stepRows);
+
     const [created] = await tx
       .insert(recipe)
       .values({
         userId,
         name: r.name,
         category: r.category,
-        description: r.description,
+        description: r.description ?? null,
         maturationDays,
-        shelfLifeDays: r.shelfLifeDays,
       })
       .returning();
     const steps = await tx
       .insert(step)
-      .values(r.steps.map((s, i) => ({ ...s, recipeId: created!.id, position: i + 1 })))
+      .values(stepRows.map((s) => ({ ...s, recipeId: created!.id })))
       .returning();
 
-    recipeIds.set(r.key, created!.id);
-    recipeSteps.set(r.key, steps.sort((a, b) => a.position - b.position));
-    maturation.set(r.key, maturationDays);
-    shelfLife.set(r.key, r.shelfLifeDays);
+    byKey.set(r.key, {
+      id: created!.id,
+      maturationDays,
+      shelfLifeDays: r.shelfLifeDays,
+      steps: steps.sort((a, b) => a.position - b.position),
+    });
   }
 
   for (const b of batches) {
+    const r = byKey.get(b.recipeKey)!;
     const startDate = fromToday(b.startOffset);
     const [created] = await tx
       .insert(batch)
       .values({
         userId,
-        recipeId: recipeIds.get(b.recipeKey)!,
+        recipeId: r.id,
         code: `${YEAR}${b.code}`,
         quantity: b.quantity,
         unit: b.unit,
         startDate,
-        expirationDate: addDays(
-          startDate,
-          maturation.get(b.recipeKey)! + shelfLife.get(b.recipeKey)!,
-        ),
+        expirationDate: addDays(startDate, r.maturationDays + r.shelfLifeDays),
         notes: b.notes ?? null,
       })
       .returning();
 
-    // Cópia das etapas da receita: data prevista = fim acumulado de cada etapa.
-    let plannedDate = startDate;
-    const rows = recipeSteps.get(b.recipeKey)!.map((s) => {
-      plannedDate = addDays(plannedDate, s.durationDays);
+    // Cópia das etapas da receita. Data prevista = dia em que a etapa termina,
+    // pelo tempo acumulado desde o início (etapas curtas terminam no mesmo dia).
+    const rows = r.steps.map((s, i) => {
+      const plannedDate = addDays(startDate, totalDays(r.steps.slice(0, i + 1)));
       return {
         batchId: created!.id,
         stepId: s.id,
         position: s.position,
         name: s.name,
-        durationDays: s.durationDays,
+        duration: s.duration,
+        durationUnit: s.durationUnit,
         plannedDate,
         completedAt: plannedDate <= TODAY ? plannedDate : null,
       };
@@ -241,8 +258,8 @@ async function seedUserData(
 
     if (b.delayed) {
       // a última etapa com prazo já vencido fica pendente, e as seguintes também
-      const overdue = rows.findLastIndex((r) => r.plannedDate < TODAY);
-      if (overdue >= 0) rows.slice(overdue).forEach((r) => (r.completedAt = null));
+      const overdue = rows.findLastIndex((row) => row.plannedDate < TODAY);
+      if (overdue >= 0) rows.slice(overdue).forEach((row) => (row.completedAt = null));
     }
 
     await tx.insert(batchStep).values(rows);
