@@ -29,7 +29,7 @@ Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm 
 
 ### Backend
 
-Autenticação (Better Auth + Drizzle + Postgres) e as tabelas de domínio (receitas, etapas, lotes) com seed, mas ainda sem rotas de domínio. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
+Autenticação (Better Auth + Drizzle + Postgres), as tabelas de domínio (receitas, etapas, lotes) com seed e a API de receitas (`/api/recipes`) em camadas model/service/controller. Ainda não há rotas de lotes. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
 
 ### App mobile — navegação em três camadas
 
@@ -61,4 +61,4 @@ Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
 ### Estado atual do produto
 
-As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. O backend já tem as tabelas de lotes e um seed, mas não há rotas de domínio nem cliente HTTP no app. Qualquer feature de lotes precisa ser construída nas duas pontas.
+As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. O backend já tem as tabelas, o seed e os endpoints de receitas, mas ainda não tem rotas de lotes, e o app não tem cliente HTTP. Qualquer feature de lotes precisa ser construída nas duas pontas.

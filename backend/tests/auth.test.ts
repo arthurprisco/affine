@@ -2,25 +2,7 @@ import { jest, describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import request from "supertest";
 import app from "../src/app.ts";
 import { db } from "../src/db/index.ts";
-
-const PASSWORD = "senha-segura-123";
-
-let seq = 0;
-/** Email único por teste, para os casos não dependerem uns dos outros. */
-function uniqueEmail(): string {
-  seq += 1;
-  return `teste${seq}-${Date.now()}@affine.test`;
-}
-
-/** Cadastra um usuário e devolve um agent já autenticado (cookie de sessão salvo). */
-async function signedUpAgent(email = uniqueEmail(), name = "Maria Queijeira") {
-  const agent = request.agent(app);
-  const res = await agent
-    .post("/api/auth/sign-up/email")
-    .send({ name, email, password: PASSWORD });
-  expect(res.status).toBe(200);
-  return { agent, email, name };
-}
+import { PASSWORD, signedUpAgent, uniqueEmail } from "./helpers.ts";
 
 beforeAll(() => {
   // Better Auth loga um warn em cada caso de erro esperado (senha errada etc.)

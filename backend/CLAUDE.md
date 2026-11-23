@@ -27,7 +27,7 @@ Não há dados reais (projeto acadêmico): o banco é descartável e `db:reset` 
 
 ## Testes (Jest)
 
-`npm test` roda os testes de integração em `tests/*.test.ts`: requisições HTTP reais contra o `app` (via `supertest`) e um Postgres real. Hoje cobrem os endpoints do Better Auth que o app usa (sign-up, sign-in, get-session, sign-out, update-user, change-email, change-password) e o CORS.
+`npm test` roda os testes de integração em `tests/*.test.ts`: requisições HTTP reais contra o `app` (via `supertest`) e um Postgres real. Cobrem os endpoints do Better Auth que o app usa (`auth.test.ts`) e o CRUD de receitas, incluindo validação, 409 e isolamento entre usuários (`recipes.test.ts`). `tests/helpers.ts` tem `signedUpAgent()` (cria um usuário e devolve um agent autenticado e o `userId`) e `uniqueEmail()`: use-os nos testes novos.
 
 - **Banco isolado**: `tests/global-setup.ts` apaga e recria `<POSTGRES_DB>_test` no mesmo container e aplica as migrations; `tests/setup-env.ts` troca `DATABASE_URL` antes de qualquer import do app. O banco de dev (seed) nunca é tocado. Testes novos que importem `src/db` funcionam sem configuração extra.
 - **ESM**: o Jest roda com `--experimental-vm-modules` (Better Auth só publica ESM) e transpila TS com `@swc/jest` — `ts-jest` não serve porque não suporta TypeScript 7. Consequência: `jest`, `describe`, `expect` etc. **não são globais**; importe de `@jest/globals` (não há `@types/jest`).
@@ -50,7 +50,37 @@ O Postgres de desenvolvimento roda em Docker (`infra/docker-compose.yaml`, image
 
 `src/server.ts` (dotenv + listen) → `src/app.ts` (Express 5) → `auth.ts` (Better Auth) → `src/db/` (Drizzle + Postgres).
 
-Toda a superfície HTTP atual é o handler catch-all do Better Auth em `/api/auth/{*any}`: sign-up/sign-in por email+senha, sign-out e get-session. As tabelas de domínio já existem (ver "Modelo de dados"), mas **ainda não há rotas de domínio** nem middleware de sessão.
+Toda a superfície HTTP atual é o handler catch-all do Better Auth em `/api/auth/{*any}`: sign-up/sign-in por email+senha, sign-out e get-session. Além dele, as rotas de domínio ficam em `src/modules/` (hoje só `/api/recipes`) e são montadas em `app.ts` **depois** de `express.json()`, seguidas pelo `errorHandler`, que é sempre o último middleware.
+
+### Camadas por módulo
+
+Cada recurso tem uma pasta em `src/modules/<recurso>/` com os arquivos abaixo. Siga o mesmo formato para lotes e os próximos recursos (`src/modules/recipes/` é a referência):
+
+- `*.schemas.ts`: schemas zod do corpo, dos params e da query, mais os tipos inferidos (`z.infer`).
+- `*.model.ts`: **só acesso a dados** (Drizzle). Toda consulta filtra por `userId`, e escritas de várias tabelas usam `db.transaction`. Sem regra de negócio e sem `AppError`.
+- `*.service.ts`: regras de negócio. Não importa nada do Express, recebe dados já validados e lança `AppError`.
+- `*.controller.ts`: faz `schema.parse(req.body/params/query)`, chama o service com `req.user!.id` e devolve o status (200/201/204). Não usa try/catch: o Express 5 repassa rejeições async ao `errorHandler`.
+- `*.routes.ts`: `Router` com `router.use(requireAuth)` e as rotas.
+
+Peças compartilhadas:
+
+- `src/middlewares/require-auth.ts`: valida a sessão com `auth.api.getSession({ headers: fromNodeHeaders(req.headers) })` e preenche `req.user` (tipado em `src/types/express.d.ts`). Sem sessão, responde 401.
+- `src/errors/app-error.ts`: `AppError(status, message, code)` e o atalho `notFound()`.
+- `src/middlewares/error-handler.ts`: converte os erros em `{ error, code, issues? }`. `AppError` vira o status dele, `ZodError` vira 400 `VALIDATION_ERROR` (com `issues`), JSON malformado vira 400 `INVALID_JSON` e o resto vira 500 (com log).
+- **Recurso de outro usuário responde 404, nunca 403**, para não revelar que ele existe. O model filtra por `userId` e o service transforma "não achou" em `notFound()`.
+
+### Endpoints de receitas (`/api/recipes`, todos exigem sessão)
+
+| Método | Rota | Observações |
+|---|---|---|
+| GET | `/` | só as ativas; `?archived=true` lista só as arquivadas. Ordem alfabética, com `steps` |
+| GET | `/:id` | receita com `steps` ordenadas por `position` |
+| POST | `/` | `{ name, category, description?, shelfLifeDays, steps: [{ name, durationDays, description? }] }` → 201 |
+| PUT | `/:id` | mesmo corpo do POST; **substitui** a receita e todas as etapas |
+| PATCH | `/:id/archive`, `/:id/unarchive` | preenche ou limpa `archivedAt` |
+| DELETE | `/:id` | 204; **409 `RECIPE_HAS_BATCHES`** se houver lotes (o cliente deve arquivar) |
+
+`maturationDays` é sempre calculado no service como a soma das `durationDays` (se o cliente enviar, é ignorado), e `position` segue a ordem do array `steps`.
 
 Detalhes que não são óbvios:
 

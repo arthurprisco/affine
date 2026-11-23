@@ -1,0 +1,29 @@
+import type { ErrorRequestHandler } from "express";
+import { ZodError } from "zod";
+import { AppError } from "../errors/app-error.ts";
+
+/** Último middleware do app: converte erros em respostas JSON `{ error, code, issues? }`. */
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (err instanceof AppError) {
+    res.status(err.status).json({ error: err.message, code: err.code });
+    return;
+  }
+
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      error: "Dados inválidos.",
+      code: "VALIDATION_ERROR",
+      issues: err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+    });
+    return;
+  }
+
+  // JSON malformado no corpo (express.json)
+  if (err?.type === "entity.parse.failed") {
+    res.status(400).json({ error: "JSON inválido.", code: "INVALID_JSON" });
+    return;
+  }
+
+  console.error(err);
+  res.status(500).json({ error: "Erro interno do servidor.", code: "INTERNAL_ERROR" });
+};
