@@ -29,7 +29,7 @@ Rodar o sistema completo = dois processos em dois terminais (`cd backend && npm 
 
 ### Backend
 
-Autenticação (Better Auth + Drizzle + Postgres), as tabelas de domínio (receitas, etapas, lotes) com seed e a API de receitas (`/api/recipes`) em camadas model/service/controller. Ainda não há rotas de lotes. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
+Autenticação (Better Auth + Drizzle + Postgres), as tabelas de domínio (receitas, etapas, lotes) com seed e as APIs de receitas (`/api/recipes`) e lotes (`/api/batches`) em camadas model/service/controller. Comandos, banco em Docker, migrations e detalhes de arquitetura estão em `backend/CLAUDE.md`.
 
 ### App mobile — navegação em três camadas
 
@@ -61,7 +61,7 @@ Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
 ### Estado atual do produto
 
-As telas de domínio são em grande parte **maquetes com dados hardcoded**: `CardProduct` e `CircularProgress` têm arrays fixos dentro do próprio componente, `AddBatch` e `Planner` são stubs de uma linha, e `AllBatches`/`Home` repetem `<CardProduct />` estático. As telas de receitas (`Recipes`, `NewRecipe`) já usam a API de verdade. O backend ainda não tem rotas de lotes, então qualquer feature de lotes precisa ser construída nas duas pontas.
+Ainda há **maquetes com dados hardcoded**: o histórico de notificações do `Profile` é fixo. O componente `CircularProgress` não é usado em nenhuma tela. Receitas (`Recipes`, `RecipeDetail`, `NewRecipe`, `EditRecipe`) e lotes (`AllBatches`, `BatchDetail`, `AddBatch`, a `Home` e a agenda `Planner`, que monta o calendário a partir de `useBatches()`) já usam a API de verdade. O status do lote (planejado, em maturação, atrasado, pronto) não é guardado: é derivado no app em `src/shared/batch.ts`. Lotes **não têm vencimento**: os produtos são maturados, quanto mais envelhecidos, melhor.
 
 ### Dados da API no app
 

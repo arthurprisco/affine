@@ -62,11 +62,12 @@ export const colors = {
       faint: "rgba(255,255,255,0.15)", // divisórias, fundos de hover/pressed
     },
     accent: "#412402", // texto sobre accent (botão principal)
+    success: "#FFFFFF", // ícone de check sobre `success` (etapa concluída)
   },
 
   // TODO: cores ainda não cadastradas (pegar no Figma)
   surface: "#F9F9F9", // fundo de cards e inputs (branco?)
-  // success: "#______", // etapas concluídas, data de previsão
+  success: "#4F7A3A", // etapas concluídas (barra segmentada e linha do tempo do lote)
   tag: "#D9D9D9", // fundo de etiqueta "Lote #..."
   track: "#D9D9D9", // trilho de barras de progresso
 };

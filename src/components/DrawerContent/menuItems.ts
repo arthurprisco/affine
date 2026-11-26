@@ -4,9 +4,15 @@ import type {
   AppTabParamList,
 } from "../../routes/app.routes";
 
+/** Telas do stack que abrem sem parâmetros (ex.: RecipeDetail precisa de `id`). */
+type ParamlessStackRoute = {
+  [K in keyof AppStackParamList]: AppStackParamList[K] extends undefined
+    ? K
+    : never;
+}[Exclude<keyof AppStackParamList, "AppTabs">];
+
 /** Destino de um item: uma aba do bottom-tabs ou uma tela do stack. */
-export type MenuRoute =
-  keyof AppTabParamList | Exclude<keyof AppStackParamList, "AppTabs">;
+export type MenuRoute = keyof AppTabParamList | ParamlessStackRoute;
 
 export type MenuItem = {
   label: string;

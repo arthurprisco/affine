@@ -8,6 +8,9 @@ import Profile from "../screens/app/Profile";
 import EditProfile from "../screens/app/EditProfile";
 import Recipes from "../screens/app/Recipes";
 import NewRecipe from "../screens/app/NewRecipe";
+import RecipeDetail from "../screens/app/RecipeDetail";
+import EditRecipe from "../screens/app/EditRecipe";
+import BatchDetail from "../screens/app/BatchDetail";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -28,6 +31,9 @@ export type AppStackParamList = {
   EditProfile: undefined;
   Recipes: undefined;
   NewRecipe: undefined;
+  RecipeDetail: { id: string };
+  EditRecipe: { id: string };
+  BatchDetail: { id: string };
 };
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -102,7 +108,14 @@ export default function AppRoutes() {
     <QueryClientProvider client={queryClient}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="AppTabs" component={AppTabs} />
-        <Stack.Screen name="EditProfile" component={EditProfile} />
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfile}
+          options={{
+            headerShown: true,
+            header: (props) => <NavBar {...props} />,
+          }}
+        />
         <Stack.Screen
           name="Recipes"
           component={Recipes}
@@ -114,6 +127,30 @@ export default function AppRoutes() {
         <Stack.Screen
           name="NewRecipe"
           component={NewRecipe}
+          options={{
+            headerShown: true,
+            header: (props) => <NavBar {...props} />,
+          }}
+        />
+        <Stack.Screen
+          name="RecipeDetail"
+          component={RecipeDetail}
+          options={{
+            headerShown: true,
+            header: (props) => <NavBar {...props} />,
+          }}
+        />
+        <Stack.Screen
+          name="EditRecipe"
+          component={EditRecipe}
+          options={{
+            headerShown: true,
+            header: (props) => <NavBar {...props} />,
+          }}
+        />
+        <Stack.Screen
+          name="BatchDetail"
+          component={BatchDetail}
           options={{
             headerShown: true,
             header: (props) => <NavBar {...props} />,

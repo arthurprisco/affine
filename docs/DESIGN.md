@@ -81,7 +81,7 @@ Para raio, fonte e espaçamento, **não crie** tokens novos sem perguntar. Eles 
 
 ## 6. Componentes
 
-Consulte `src/components/ui/index.ts` antes de criar qualquer elemento. Prefira compor com o que existe.
+Consulte `src/components/` antes de criar qualquer elemento. Prefira compor com o que existe.
 
 Ao criar um componente novo:
 
