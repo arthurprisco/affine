@@ -4,6 +4,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "../auth.ts";
 import { errorHandler } from "./middlewares/error-handler.ts";
 import recipeRoutes from "./modules/recipes/recipe.routes.ts";
+import batchRoutes from "./modules/batches/batch.routes.ts";
 
 const app: Express = express();
 
@@ -16,6 +17,7 @@ app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/batches", batchRoutes);
 
 // sempre o último: converte erros das rotas em respostas JSON
 app.use(errorHandler);

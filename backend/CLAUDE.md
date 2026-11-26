@@ -23,11 +23,11 @@ npm run db:reset                      # services:up → apaga tudo (src/db/reset
 
 `drizzle/` é **versionada** (tabelas do Better Auth + tabelas de produção). Num clone novo basta `npm run db:reset`. Depois de alterar `src/db/schema/`, rode `db:generate` e em seguida `db:reset`.
 
-Não há dados reais (projeto acadêmico): o banco é descartável e `db:reset` é o fluxo normal. O `reset.ts` recusa rodar se `NODE_ENV=production` ou se o host de `DATABASE_URL` não for local. O seed cria `demo@affine.dev` e `outro@affine.dev` (senha `affine123`) via `auth.api.signUpEmail` — usuários nunca devem ser inseridos direto nas tabelas, porque a senha fica com hash em `account`. As datas do seed são relativas a hoje, então sempre existem lotes planejados, em maturação, prontos, perto de vencer, vencidos e atrasados.
+Não há dados reais (projeto acadêmico): o banco é descartável e `db:reset` é o fluxo normal. O `reset.ts` recusa rodar se `NODE_ENV=production` ou se o host de `DATABASE_URL` não for local. O seed cria `demo@affine.dev` e `outro@affine.dev` (senha `affine123`) via `auth.api.signUpEmail` — usuários nunca devem ser inseridos direto nas tabelas, porque a senha fica com hash em `account`. As datas do seed são relativas a hoje, então sempre existem lotes planejados, em maturação, prontos e atrasados.
 
 ## Testes (Jest)
 
-`npm test` roda os testes de integração em `tests/*.test.ts`: requisições HTTP reais contra o `app` (via `supertest`) e um Postgres real. Cobrem os endpoints do Better Auth que o app usa (`auth.test.ts`) e o CRUD de receitas, incluindo validação, 409 e isolamento entre usuários (`recipes.test.ts`). `tests/helpers.ts` tem `signedUpAgent()` (cria um usuário e devolve um agent autenticado e o `userId`) e `uniqueEmail()`: use-os nos testes novos.
+`npm test` roda os testes de integração em `tests/*.test.ts`: requisições HTTP reais contra o `app` (via `supertest`) e um Postgres real. Cobrem os endpoints do Better Auth que o app usa (`auth.test.ts`) e os CRUDs de receitas e lotes, incluindo validação, 409 e isolamento entre usuários (`recipes.test.ts`, `batches.test.ts`). `tests/helpers.ts` tem `signedUpAgent()` (cria um usuário e devolve um agent autenticado e o `userId`) e `uniqueEmail()`: use-os nos testes novos.
 
 - **Banco isolado**: `tests/global-setup.ts` apaga e recria `<POSTGRES_DB>_test` no mesmo container e aplica as migrations; `tests/setup-env.ts` troca `DATABASE_URL` antes de qualquer import do app. O banco de dev (seed) nunca é tocado. Testes novos que importem `src/db` funcionam sem configuração extra.
 - **ESM**: o Jest roda com `--experimental-vm-modules` (Better Auth só publica ESM) e transpila TS com `@swc/jest` — `ts-jest` não serve porque não suporta TypeScript 7. Consequência: `jest`, `describe`, `expect` etc. **não são globais**; importe de `@jest/globals` (não há `@types/jest`).
@@ -50,7 +50,7 @@ O Postgres de desenvolvimento roda em Docker (`infra/docker-compose.yaml`, image
 
 `src/server.ts` (dotenv + listen) → `src/app.ts` (Express 5) → `auth.ts` (Better Auth) → `src/db/` (Drizzle + Postgres).
 
-Toda a superfície HTTP atual é o handler catch-all do Better Auth em `/api/auth/{*any}`: sign-up/sign-in por email+senha, sign-out e get-session. Além dele, as rotas de domínio ficam em `src/modules/` (hoje só `/api/recipes`) e são montadas em `app.ts` **depois** de `express.json()`, seguidas pelo `errorHandler`, que é sempre o último middleware.
+Toda a superfície HTTP atual é o handler catch-all do Better Auth em `/api/auth/{*any}`: sign-up/sign-in por email+senha, sign-out e get-session. Além dele, as rotas de domínio ficam em `src/modules/` (`/api/recipes` e `/api/batches`) e são montadas em `app.ts` **depois** de `express.json()`, seguidas pelo `errorHandler`, que é sempre o último middleware.
 
 ### Camadas por módulo
 
@@ -93,9 +93,21 @@ Detalhes que não são óbvios:
 
 `user` 1─N `recipe` 1─N `step`; `user` 1─N `batch` N─1 `recipe`; `batch` 1─N `batch_step` N─0..1 `step`.
 
-- **recipe**: receita de produto, com `maturation_days` (soma das etapas em dias, arredondada para cima). A receita **não guarda validade**: o vencimento é definido por lote (`batch.expiration_date`). Com lotes ela não pode ser apagada (`batch.recipe_id` é `ON DELETE RESTRICT`): use `archived_at`.
+- **recipe**: receita de produto, com `maturation_days` (soma das etapas em dias, arredondada para cima). **Não existe validade/vencimento** em lugar nenhum: os produtos são maturados (quanto mais envelhecidos, melhor). Com lotes ela não pode ser apagada (`batch.recipe_id` é `ON DELETE RESTRICT`): use `archived_at`.
 - **step**: etapa-modelo da receita, ordenada por `position` (único por receita). A duração é `duration` (inteiro ≥ 1) + `duration_unit` (enum pg `duration_unit`: minutos, horas, dias, semanas, meses, anos). As unidades e os fatores de conversão (mês = 30 dias, ano = 365) ficam em `src/shared/duration.ts` e **precisam ficar iguais aos de `src/shared/duration.ts` do app**.
-- **batch**: lote; `code` único por usuário, `quantity` numeric + `unit`, `start_date`, `expiration_date`. Tem `user_id` próprio (para filtrar por sessão sem join), então ao criar um lote é preciso **validar que a receita pertence ao mesmo usuário** — o banco não garante isso.
+- **batch**: lote; `code` único por usuário, `quantity` numeric + `unit`, `start_date`. Tem `user_id` próprio (para filtrar por sessão sem join), então ao criar um lote é preciso **validar que a receita pertence ao mesmo usuário** — o banco não garante isso.
 - **batch_step**: etapa executada do lote. Ao criar o lote, **copie** `position`/`name`/`duration`/`duration_unit` da etapa-modelo (em vez de só referenciar `step_id`, que vira `null` se a etapa for apagada); assim editar a receita não altera o histórico. `planned_date` = dia em que a etapa termina, pelo tempo acumulado desde `start_date` (`totalDays` das etapas até ela; etapas de minutos/horas terminam no mesmo dia ou no seguinte); `completed_at` nulo = pendente.
-- **Não existe coluna de status**: planejado/em produção/maturando/pronto/vencido/atrasado são derivados de `batch_step` + `expiration_date` + data atual.
+- **Não existe coluna de status**: planejado/em maturação/atrasado/pronto são derivados de `batch_step` + `start_date` + data atual.
 - Datas de calendário usam `date` com `mode: "string"` (`YYYY-MM-DD`); ids são `text` com `crypto.randomUUID()`.
+
+### Endpoints de lotes (`/api/batches`, todos exigem sessão)
+
+Todo lote volta com `steps` (ordenadas por `position`) e `recipe: { id, name, category }`.
+
+| Método | Rota | Observações |
+|---|---|---|
+| GET | `/` | lotes do usuário, `startDate` mais recente primeiro |
+| GET | `/:id` | um lote |
+| POST | `/` | `{ recipeId, code, quantity, unit, startDate, notes? }` (data AAAA-MM-DD) → 201. Copia as etapas da receita para `batch_step` com `plannedDate` = dia em que a etapa termina (`planBatchSteps` em `src/shared/schedule.ts`, o mesmo usado pelo seed). 409 `BATCH_CODE_TAKEN` (código repetido do usuário) e 409 `RECIPE_ARCHIVED` |
+| PATCH | `/:id/steps/:stepId` | `{ completed: boolean }`: preenche `completedAt` com hoje ou limpa |
+| DELETE | `/:id` | → 204; as etapas vão em cascata |

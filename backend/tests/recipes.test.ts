@@ -238,7 +238,6 @@ describe("DELETE /api/recipes/:id", () => {
       quantity: 10,
       unit: "unidades",
       startDate: "2026-01-01",
-      expirationDate: "2026-04-01",
     });
 
     const res = await agent.delete(`/api/recipes/${created.id}`);

@@ -65,7 +65,7 @@ export const step = pgTable(
   (table) => [unique("step_recipe_position_uq").on(table.recipeId, table.position)],
 );
 
-/** Lote produzido a partir de uma receita. Status é derivado de batch_step + expiration_date. */
+/** Lote produzido a partir de uma receita. Status é derivado de batch_step + data atual (produto maturado não tem validade). */
 export const batch = pgTable(
   "batch",
   {
@@ -80,7 +80,6 @@ export const batch = pgTable(
     quantity: numeric("quantity", { precision: 10, scale: 2, mode: "number" }).notNull(),
     unit: text("unit").notNull(),
     startDate: date("start_date", { mode: "string" }).notNull(),
-    expirationDate: date("expiration_date", { mode: "string" }).notNull(),
     notes: text("notes"),
     ...timestamps,
   },
