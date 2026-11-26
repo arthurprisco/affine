@@ -18,37 +18,37 @@ import { colors } from "../../../shared/colors";
 import { Recipe, useRecipes } from "../../../api/recipes";
 import { errorMessage } from "../../../lib/api";
 import type { AppStackParamList } from "../../../routes/app.routes";
-import { formatTotalDuration, toMinutes } from "../../../shared/duration";
+import { formatTotalDuration, totalMinutes } from "../../../shared/duration";
+import { normalize } from "../../../shared/text";
 
-/** Comparação sem acentos e sem diferenciar maiúsculas. */
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function RecipeCard({ recipe }: { recipe: Recipe }) {
-  const totalMinutes = recipe.steps.reduce(
-    (sum, step) => sum + toMinutes(step.duration, step.durationUnit),
-    0,
-  );
-
+function RecipeCard({
+  recipe,
+  onPress,
+}: {
+  recipe: Recipe;
+  onPress: () => void;
+}) {
   return (
-    <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface p-3">
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={recipe.name}
+      accessibilityHint="Abre os detalhes da receita"
+      className="flex-row items-center gap-3 rounded-md border border-line bg-surface p-3 active:opacity-70"
+    >
       <View className="h-10 w-10 items-center justify-center rounded-full bg-primary">
         <Feather name="book-open" size={18} color={colors.accent.DEFAULT} />
       </View>
       <View className="flex-1">
         <Text className="font-body-medium text-sm text-ink">{recipe.name}</Text>
         <Text className="font-body text-xs text-ink-muted">
-          {recipe.category} · {formatTotalDuration(totalMinutes)} ·{" "}
-          {recipe.steps.length} {recipe.steps.length === 1 ? "etapa" : "etapas"}
+          {recipe.category} · {formatTotalDuration(totalMinutes(recipe.steps))}{" "}
+          · {recipe.steps.length}{" "}
+          {recipe.steps.length === 1 ? "etapa" : "etapas"}
         </Text>
       </View>
       <Feather name="chevron-right" size={20} color={colors.line.DEFAULT} />
-    </View>
+    </Pressable>
   );
 }
 
@@ -110,7 +110,12 @@ export default function Recipes() {
       <FlatList
         data={filteredRecipes}
         keyExtractor={(recipe) => recipe.id}
-        renderItem={({ item }) => <RecipeCard recipe={item} />}
+        renderItem={({ item }) => (
+          <RecipeCard
+            recipe={item}
+            onPress={() => navigation.navigate("RecipeDetail", { id: item.id })}
+          />
+        )}
         contentContainerClassName="gap-2 pb-6"
         keyboardShouldPersistTaps="handled"
         renderScrollComponent={(props) => <KeyboardScrollView {...props} />}

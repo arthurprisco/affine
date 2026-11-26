@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
-import { RecipeInput, useCreateRecipe } from "../../../api/recipes";
+import {
+  Recipe,
+  RecipeInput,
+  useCreateRecipe,
+  useUpdateRecipe,
+} from "../../../api/recipes";
 import { errorMessage } from "../../../lib/api";
 import { DurationUnit } from "../../../shared/duration";
 
@@ -26,8 +31,14 @@ export type FormErrors = {
 
 const DEFAULT_UNIT: DurationUnit = "dias";
 
-export function useNewRecipeForm(onSaved: () => void) {
+/**
+ * Estado e validação do formulário de receita. Sem `recipe`, cria uma nova;
+ * com `recipe`, abre preenchido e salva por cima dela (PUT).
+ */
+export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
   const createRecipe = useCreateRecipe();
+  const updateRecipe = useUpdateRecipe(recipe?.id ?? "");
+  const mutation = recipe ? updateRecipe : createRecipe;
 
   // Ids locais estáveis para os cards de etapa (usados como `key`).
   const nextId = useRef(1);
@@ -39,10 +50,22 @@ export function useNewRecipeForm(onSaved: () => void) {
     durationUnit: DEFAULT_UNIT,
   });
 
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
-  const [description, setDescription] = useState("");
-  const [steps, setSteps] = useState<StepDraft[]>(() => [newStep()]);
+  const [name, setName] = useState(recipe?.name ?? "");
+  const [category, setCategory] = useState<string | null>(
+    recipe?.category ?? null,
+  );
+  const [description, setDescription] = useState(recipe?.description ?? "");
+  const [steps, setSteps] = useState<StepDraft[]>(() =>
+    recipe && recipe.steps.length > 0
+      ? recipe.steps.map((step) => ({
+          ...newStep(),
+          name: step.name,
+          description: step.description ?? "",
+          duration: String(step.duration),
+          durationUnit: step.durationUnit,
+        }))
+      : [newStep()],
+  );
   const [errors, setErrors] = useState<FormErrors>({});
 
   function addStep() {
@@ -133,12 +156,12 @@ export function useNewRecipeForm(onSaved: () => void) {
   }
 
   async function submit() {
-    if (createRecipe.isPending) return false;
-    const recipe = validate();
-    if (!recipe) return false;
+    if (mutation.isPending) return false;
+    const input = validate();
+    if (!input) return false;
 
     try {
-      await createRecipe.mutateAsync(recipe);
+      await mutation.mutateAsync(input);
     } catch {
       // a mensagem aparece via `submitError`
       return false;
@@ -159,9 +182,9 @@ export function useNewRecipeForm(onSaved: () => void) {
     moveStep,
     errors,
     submit,
-    saving: createRecipe.isPending,
-    submitError: createRecipe.error
-      ? errorMessage(createRecipe.error, "Não foi possível salvar a receita.")
+    saving: mutation.isPending,
+    submitError: mutation.error
+      ? errorMessage(mutation.error, "Não foi possível salvar a receita.")
       : null,
   };
 }

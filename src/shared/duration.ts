@@ -35,6 +35,16 @@ export function toMinutes(duration: number, unit: DurationUnit) {
   return duration * MINUTES_PER_UNIT[unit];
 }
 
+/** Soma das durações de uma lista de etapas, em minutos. */
+export function totalMinutes(
+  steps: { duration: number; durationUnit: DurationUnit }[],
+) {
+  return steps.reduce(
+    (sum, step) => sum + toMinutes(step.duration, step.durationUnit),
+    0,
+  );
+}
+
 /** Formata um total em minutos na maior unidade entre dias, horas e minutos. */
 export function formatTotalDuration(totalMinutes: number) {
   const days = Math.round(totalMinutes / MINUTES_PER_UNIT.dias);

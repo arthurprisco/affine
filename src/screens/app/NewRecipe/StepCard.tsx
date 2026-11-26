@@ -9,7 +9,7 @@ import {
   DURATION_UNIT_LABELS,
   DurationUnit,
 } from "../../../shared/duration";
-import { StepDraft, StepErrors, StepField } from "./useNewRecipeForm";
+import { StepDraft, StepErrors, StepField } from "./useRecipeForm";
 
 const UNIT_OPTIONS = DURATION_UNITS.map((unit) => ({
   value: unit,

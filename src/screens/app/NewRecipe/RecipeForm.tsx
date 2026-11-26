@@ -8,10 +8,10 @@ import { Chip } from "../../../components/Chip";
 import { AddButton } from "../../../components/AddButton";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { SortableList } from "../../../components/SortableList";
-import { RECIPE_CATEGORIES } from "../../../api/recipes";
+import { Recipe, RECIPE_CATEGORIES } from "../../../api/recipes";
 import { SpanMessage } from "../../../components/SpanMessage";
 import { KeyboardScrollView } from "../../../components/KeyboardScrollView";
-import { useNewRecipeForm } from "./useNewRecipeForm";
+import { useRecipeForm } from "./useRecipeForm";
 import { StepCard } from "./StepCard";
 
 /** Bloco de formulário com label acima e erro abaixo. */
@@ -33,9 +33,16 @@ function Field({
   );
 }
 
-export default function NewRecipe() {
+type RecipeFormProps = {
+  title: string;
+  /** Receita a editar. Sem ela, o formulário cria uma nova. */
+  recipe?: Recipe;
+};
+
+/** Formulário completo de receita, usado em Nova receita e Editar receita. */
+export function RecipeForm({ title, recipe }: RecipeFormProps) {
   const navigation = useNavigation();
-  const form = useNewRecipeForm(() => navigation.goBack());
+  const form = useRecipeForm(() => navigation.goBack(), recipe);
   const { values, errors } = form;
   // Travado enquanto o usuário arrasta uma etapa, para o scroll não competir.
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -72,7 +79,7 @@ export default function NewRecipe() {
         keyboardShouldPersistTaps="handled"
         scrollEnabled={scrollEnabled}
       >
-        <Title label="Nova receita" />
+        <Title label={title} />
 
         <View className="gap-4">
           <Input
@@ -145,7 +152,7 @@ export default function NewRecipe() {
         )}
 
         <Button
-          label="Salvar receita"
+          label={recipe ? "Salvar alterações" : "Salvar receita"}
           onPress={form.submit}
           loading={form.saving}
         />
