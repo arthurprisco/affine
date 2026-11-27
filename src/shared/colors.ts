@@ -37,19 +37,22 @@ export const colors = {
 
   // Texto
   ink: {
-    DEFAULT: "#424242", // títulos e texto principal
+    DEFAULT: "#424242", // títulos, texto principal e linhas laterais do Title
     muted: "#656565", // metadados ("90 dias · 5 etapas")
     placeholder: "#9A9A9A", // placeholder de input
   },
 
   // Linhas e bordas
   line: {
-    DEFAULT: "#D3D1C7", // borda padrão de cards, linhas do título de seção
+    DEFAULT: "#D3D1C7", // borda padrão de cards e divisórias
     input: "#9A9A9A", // borda de input/botão secundário, se for diferente
   },
 
-  // Erro / perigo: mensagens de erro de campo em formulários
-  danger: "#B3261E",
+  // Erro / perigo
+  danger: {
+    DEFAULT: "#B3261E", // texto, borda e ícone de erro (campo, SpanMessage, excluir)
+    soft: "#FFD8D8", // fundo da mensagem de erro (SpanMessage)
+  },
 
   // Camada que escurece a tela atrás de diálogos (Dialog, Select, ConfirmDialog)
   overlay: "rgba(0,0,0,0.5)",
@@ -58,6 +61,7 @@ export const colors = {
   on: {
     primary: {
       DEFAULT: "rgba(255,255,255,0.75)", // ícones e texto na NavBar/TabBar/Drawer
+      strong: "#FFFFFF", // destaque: ícones da NavBar, rótulos da TabBar, nome no Drawer, iniciais do avatar
       subtle: "rgba(255,255,255,0.55)", // itens inativos
       faint: "rgba(255,255,255,0.15)", // divisórias, fundos de hover/pressed
     },

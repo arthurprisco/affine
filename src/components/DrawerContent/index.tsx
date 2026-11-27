@@ -77,10 +77,10 @@ export function DrawerContent(props: DrawerContentComponentProps) {
           <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-accent">
             <Feather name="layers" size={24} color={colors.on.accent} />
           </View>
-          <Text className="text-[22px] font-bold tracking-[1px] text-white">
+          <Text className="font-body-semibold text-lg tracking-[1px] text-on-primary-strong">
             Affine
           </Text>
-          <Text className="mt-0.5 text-[13px] text-on-primary-subtle">
+          <Text className="mt-0.5 font-body text-xs text-on-primary-subtle">
             Gestão de produção artesanal
           </Text>
         </View>

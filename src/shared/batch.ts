@@ -41,6 +41,12 @@ export function currentStep(batch: Batch) {
   return batch.steps.find((step) => !step.completedAt) ?? null;
 }
 
+/** Última etapa concluída: a única que pode ser desfeita. */
+export function lastCompletedStep(batch: Batch) {
+  // sem findLast: nem todo runtime do Hermes tem
+  return [...batch.steps].reverse().find((step) => step.completedAt) ?? null;
+}
+
 /** Previsão de término = data prevista da última etapa. */
 export function expectedEnd(batch: Batch) {
   return batch.steps.at(-1)?.plannedDate ?? batch.startDate;

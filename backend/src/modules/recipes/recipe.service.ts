@@ -15,6 +15,7 @@ function toRows(input: RecipeInput) {
     duration: s.duration,
     durationUnit: s.durationUnit,
     description: s.description ?? null,
+    autoAdvance: s.autoAdvance,
   }));
 
   return {

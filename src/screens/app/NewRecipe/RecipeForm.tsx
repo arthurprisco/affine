@@ -136,6 +136,9 @@ export function RecipeForm({ title, recipe }: RecipeFormProps) {
                         form.updateStep(step.id, field, value)
                       }
                       onUnitChange={(unit) => form.setStepUnit(step.id, unit)}
+                      onAutoAdvanceChange={(value) =>
+                        form.setStepAutoAdvance(step.id, value)
+                      }
                     />
                   );
                 }}

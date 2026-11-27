@@ -15,9 +15,14 @@ export type StepDraft = {
   description: string;
   duration: string;
   durationUnit: DurationUnit;
+  /** Conclui sozinha na data prevista (etapa de espera, como maturar). */
+  autoAdvance: boolean;
 };
 
-export type StepField = keyof Omit<StepDraft, "id" | "durationUnit">;
+export type StepField = keyof Omit<
+  StepDraft,
+  "id" | "durationUnit" | "autoAdvance"
+>;
 
 export type StepErrors = { name?: string; duration?: string };
 
@@ -48,6 +53,7 @@ export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
     description: "",
     duration: "",
     durationUnit: DEFAULT_UNIT,
+    autoAdvance: false,
   });
 
   const [name, setName] = useState(recipe?.name ?? "");
@@ -63,6 +69,7 @@ export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
           description: step.description ?? "",
           duration: String(step.duration),
           durationUnit: step.durationUnit,
+          autoAdvance: step.autoAdvance,
         }))
       : [newStep()],
   );
@@ -81,6 +88,12 @@ export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
   function setStepUnit(id: string, durationUnit: DurationUnit) {
     setSteps((list) =>
       list.map((item) => (item.id === id ? { ...item, durationUnit } : item)),
+    );
+  }
+
+  function setStepAutoAdvance(id: string, autoAdvance: boolean) {
+    setSteps((list) =>
+      list.map((item) => (item.id === id ? { ...item, autoAdvance } : item)),
     );
   }
 
@@ -135,6 +148,7 @@ export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
           description: item.description || undefined,
           duration,
           durationUnit: item.durationUnit,
+          autoAdvance: item.autoAdvance,
         });
       }
     }
@@ -178,6 +192,7 @@ export function useRecipeForm(onSaved: () => void, recipe?: Recipe) {
     addStep,
     updateStep,
     setStepUnit,
+    setStepAutoAdvance,
     removeStep,
     moveStep,
     errors,

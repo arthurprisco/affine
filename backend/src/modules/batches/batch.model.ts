@@ -40,30 +40,37 @@ export async function insertWithSteps(data: BatchRow, steps: BatchStepRow[]): Pr
   });
 }
 
-/** Marca/desmarca uma etapa. Retorna false se a etapa não for de um lote do usuário. */
-export async function setStepCompletedAt(
-  batchId: string,
-  stepId: string,
-  userId: string,
-  completedAt: string | null,
-): Promise<boolean> {
-  const ownBatch = db
-    .select({ id: batch.id })
-    .from(batch)
-    .where(and(eq(batch.id, batchId), eq(batch.userId, userId)));
+/** Alteração em uma etapa de lote: só os campos presentes são gravados. */
+export type StepChange = {
+  batchId: string;
+  id: string;
+  completedAt?: string | null;
+  notes?: string | null;
+  plannedDate?: string;
+  autoAdvance?: boolean;
+};
 
-  const updated = await db
-    .update(batchStep)
-    .set({ completedAt })
-    .where(
-      and(
-        eq(batchStep.id, stepId),
-        eq(batchStep.batchId, batchId),
-        inArray(batchStep.batchId, ownBatch),
-      ),
-    )
-    .returning({ id: batchStep.id });
-  return updated.length > 0;
+/** Aplica as alterações numa transação, só em etapas de lotes do usuário. */
+export async function applyStepChanges(userId: string, changes: StepChange[]): Promise<void> {
+  if (!changes.length) return;
+  await db.transaction(async (tx) => {
+    for (const { batchId, id, ...fields } of changes) {
+      const ownBatch = tx
+        .select({ id: batch.id })
+        .from(batch)
+        .where(and(eq(batch.id, batchId), eq(batch.userId, userId)));
+      await tx
+        .update(batchStep)
+        .set(fields)
+        .where(
+          and(
+            eq(batchStep.id, id),
+            eq(batchStep.batchId, batchId),
+            inArray(batchStep.batchId, ownBatch),
+          ),
+        );
+    }
+  });
 }
 
 /** Apaga o lote (as etapas vão em cascata). Retorna false se não for do usuário. */

@@ -9,6 +9,8 @@ export const stepInputSchema = z.object({
   duration: positiveInt,
   durationUnit: z.enum(DURATION_UNITS),
   description: text.nullish(),
+  /** Conclui sozinha na data prevista (etapas de espera, como maturar). */
+  autoAdvance: z.boolean().default(false),
 });
 
 /** Corpo do POST e do PUT: a receita completa, com as etapas na ordem de execução. */

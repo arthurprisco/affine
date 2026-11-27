@@ -16,12 +16,12 @@ export default function Title({ label }: TitleProps) {
   }
 
   return (
-    <View className="mb-[14px] flex-row items-center gap-4">
-      <View className="h-[2px] w-full flex-1 bg-[gray]" />
+    <View className="mb-3.5 flex-row items-center gap-4">
+      <View className="h-0.5 w-full flex-1 bg-ink" />
       <Text className="font-title text-2xl tracking-[1px] text-ink">
         {label.toUpperCase()}
       </Text>
-      <View className="h-[2px] w-full flex-1 bg-[gray]" />
+      <View className="h-0.5 w-full flex-1 bg-ink" />
     </View>
   );
 }

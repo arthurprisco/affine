@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Input } from "../../../components/Input";
 import { Select } from "../../../components/Select";
@@ -49,6 +49,7 @@ type StepCardProps = {
   onRemove: () => void;
   onChange: (field: StepField, value: string) => void;
   onUnitChange: (unit: DurationUnit) => void;
+  onAutoAdvanceChange: (value: boolean) => void;
 };
 
 /** Card de etapa de produção: recolhido mostra só o nome; expandido, os demais campos. */
@@ -63,6 +64,7 @@ export function StepCard({
   onRemove,
   onChange,
   onUnitChange,
+  onAutoAdvanceChange,
 }: StepCardProps) {
   const number = index + 1;
 
@@ -138,6 +140,25 @@ export function StepCard({
                 accessibilityLabel={`Unidade da duração da etapa ${number}`}
               />
             </View>
+          </View>
+
+          <View className="flex-row items-center gap-3">
+            <View className="flex-1 gap-0.5">
+              <Text className="font-body text-sm text-ink">Avança sozinha</Text>
+              <Text className="font-body text-xs text-ink-muted">
+                Conclui na data prevista, sem confirmação (ex.: maturação)
+              </Text>
+            </View>
+            <Switch
+              value={step.autoAdvance}
+              onValueChange={onAutoAdvanceChange}
+              trackColor={{
+                false: colors.line.DEFAULT,
+                true: colors.accent.DEFAULT,
+              }}
+              ios_backgroundColor={colors.line.DEFAULT}
+              accessibilityLabel={`Etapa ${number} avança sozinha`}
+            />
           </View>
         </>
       )}

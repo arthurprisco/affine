@@ -3,7 +3,7 @@ import { colors } from "../../shared/colors";
 
 export function TabBar({ state, descriptors, navigation }: any) {
   return (
-    <View className="absolute bottom-[18px] left-3 right-3 h-[70px] flex-row items-center justify-around rounded-[20px] bg-primary shadow-lg shadow-black/30">
+    <View className="absolute bottom-[18px] left-3 right-3 h-[70px] flex-row items-center justify-around rounded-lg bg-primary shadow-lg shadow-black/30">
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
 
@@ -28,7 +28,9 @@ export function TabBar({ state, descriptors, navigation }: any) {
         };
 
         // A cor do ícone é passada como valor (prop), não como classe
-        const color = isFocused ? colors.accent.DEFAULT : "#fff";
+        const color = isFocused
+          ? colors.accent.DEFAULT
+          : colors.on.primary.strong;
 
         const icon = options.tabBarIcon?.({
           color,
@@ -46,7 +48,11 @@ export function TabBar({ state, descriptors, navigation }: any) {
           >
             {icon}
             <Text
-              className={`mt-1 text-xs font-bold ${isFocused ? "text-accent" : "text-white"}`}
+              className={
+                isFocused
+                  ? "mt-1 font-body-semibold text-xs text-accent"
+                  : "mt-1 font-body-semibold text-xs text-on-primary-strong"
+              }
             >
               {label}
             </Text>

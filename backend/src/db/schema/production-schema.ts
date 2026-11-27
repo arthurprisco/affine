@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   integer,
+  boolean,
   numeric,
   date,
   index,
@@ -61,6 +62,8 @@ export const step = pgTable(
     duration: integer("duration").notNull(),
     durationUnit: durationUnit("duration_unit").notNull(),
     description: text("description"),
+    /** Etapa de espera (maturar, envelhecer): conclui sozinha na data prevista, sem confirmação. */
+    autoAdvance: boolean("auto_advance").notNull().default(false),
   },
   (table) => [unique("step_recipe_position_uq").on(table.recipeId, table.position)],
 );
@@ -107,6 +110,8 @@ export const batchStep = pgTable(
     duration: integer("duration").notNull(),
     durationUnit: durationUnit("duration_unit").notNull(),
     plannedDate: date("planned_date", { mode: "string" }).notNull(),
+    /** Copiado da etapa-modelo. Vira false se o produtor desfizer a conclusão automática. */
+    autoAdvance: boolean("auto_advance").notNull().default(false),
     completedAt: date("completed_at", { mode: "string" }),
     notes: text("notes"),
   },

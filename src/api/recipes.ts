@@ -11,6 +11,8 @@ export type Step = {
   duration: number;
   durationUnit: DurationUnit;
   description: string | null;
+  /** Etapa de espera: no lote, conclui sozinha na data prevista. */
+  autoAdvance: boolean;
 };
 
 export type Recipe = {
@@ -37,6 +39,7 @@ export type RecipeInput = {
     duration: number;
     durationUnit: DurationUnit;
     description?: string;
+    autoAdvance: boolean;
   }[];
 };
 

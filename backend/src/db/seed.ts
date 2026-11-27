@@ -26,7 +26,8 @@ const YEAR = today.getFullYear();
 
 // ---------- dados ----------
 
-type StepSeed = [name: string, duration: number, unit: DurationUnit];
+/** `auto` = etapa de espera, que avança sozinha na data prevista. */
+type StepSeed = [name: string, duration: number, unit: DurationUnit, auto?: "auto"];
 
 type RecipeSeed = {
   key: string;
@@ -71,7 +72,7 @@ const demoRecipes: RecipeSeed[] = [
       ["Pasteurizar o leite", 30, "minutos"],
       ["Coagular", 45, "minutos"],
       ["Enformar", 2, "horas"],
-      ["Maturar", 20, "dias"],
+      ["Maturar", 20, "dias", "auto"],
     ],
   },
   {
@@ -84,7 +85,7 @@ const demoRecipes: RecipeSeed[] = [
       ["Cozinhar a massa", 1, "horas"],
       ["Prensar", 1, "dias"],
       ["Salmoura", 2, "semanas"],
-      ["Maturar", 6, "meses"],
+      ["Maturar", 6, "meses", "auto"],
       ["Virar periodicamente", 6, "meses"],
     ],
   },
@@ -95,9 +96,9 @@ const demoRecipes: RecipeSeed[] = [
     description: "Corte de Cabernet Sauvignon e Merlot.",
     steps: [
       ["Desengaçar e esmagar", 3, "horas"],
-      ["Fermentar", 2, "semanas"],
+      ["Fermentar", 2, "semanas", "auto"],
       ["Prensar", 1, "dias"],
-      ["Envelhecer", 1, "anos"],
+      ["Envelhecer", 1, "anos", "auto"],
     ],
   },
   {
@@ -107,7 +108,7 @@ const demoRecipes: RecipeSeed[] = [
     steps: [
       ["Esmagar", 2, "horas"],
       ["Maceração curta", 12, "horas"],
-      ["Fermentar", 3, "semanas"],
+      ["Fermentar", 3, "semanas", "auto"],
       ["Engarrafar", 1, "dias"],
     ],
   },
@@ -173,11 +174,12 @@ async function seedUserData(
   >();
 
   for (const r of recipes) {
-    const stepRows = r.steps.map(([name, duration, durationUnit], i) => ({
+    const stepRows = r.steps.map(([name, duration, durationUnit, auto], i) => ({
       position: i + 1,
       name,
       duration,
       durationUnit,
+      autoAdvance: auto === "auto",
     }));
     const maturationDays = totalDays(stepRows);
 
@@ -228,6 +230,7 @@ async function seedUserData(
         name: s.name,
         duration: s.duration,
         durationUnit: s.durationUnit,
+        autoAdvance: s.autoAdvance,
         plannedDate,
         completedAt: plannedDate <= TODAY ? plannedDate : null,
       };

@@ -26,6 +26,12 @@ export const batchParamsSchema = z.object({ id: text });
 
 export const batchStepParamsSchema = z.object({ id: text, stepId: text });
 
-export const stepCompletionSchema = z.object({ completed: z.boolean() });
+export const stepCompletionSchema = z.object({
+  completed: z.boolean(),
+  /** Observação da conclusão (ex.: "pH 5,2"). Ignorada ao desfazer. */
+  notes: z.string().trim().max(500, "Máximo de 500 caracteres.").nullish(),
+});
+
+export type StepCompletionInput = z.infer<typeof stepCompletionSchema>;
 
 export type BatchInput = z.infer<typeof batchInputSchema>;

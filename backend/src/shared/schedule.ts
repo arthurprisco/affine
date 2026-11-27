@@ -31,3 +31,41 @@ export function planBatchSteps<S extends { duration: number; durationUnit: Durat
     plannedDate: addDays(startDate, totalDays(steps.slice(0, i + 1))),
   }));
 }
+
+/** Etapa de lote com o mínimo que as regras de avanço precisam. */
+type ScheduledStep = {
+  id: string;
+  duration: number;
+  durationUnit: DurationUnit;
+  plannedDate: string;
+  completedAt: string | null;
+  autoAdvance: boolean;
+};
+
+/**
+ * Etapas automáticas que já deveriam ter terminado: a partir da etapa atual (primeira pendente),
+ * enquanto forem automáticas com data prevista até hoje. Concluem na própria data prevista.
+ * Para na primeira etapa manual ou futura, e não avança lote que ainda não começou.
+ */
+export function dueAutoSteps(startDate: string, steps: ScheduledStep[], today = todayISO()) {
+  if (startDate > today) return [];
+  const due: { id: string; completedAt: string }[] = [];
+  for (const s of steps) {
+    if (s.completedAt) continue;
+    if (!s.autoAdvance || s.plannedDate > today) break;
+    due.push({ id: s.id, completedAt: s.plannedDate });
+  }
+  return due;
+}
+
+/**
+ * Nova data prevista das etapas pendentes, contada a partir da conclusão real da última etapa
+ * concluída (ou do início do lote, se nenhuma foi). Devolve só as que mudaram.
+ */
+export function replanPending(startDate: string, steps: ScheduledStep[]) {
+  const anchor = steps.findLast((s) => s.completedAt)?.completedAt ?? startDate;
+  const pending = steps.filter((s) => !s.completedAt);
+  return planBatchSteps(anchor, pending)
+    .filter((s, i) => s.plannedDate !== pending[i]!.plannedDate)
+    .map((s) => ({ id: s.id, plannedDate: s.plannedDate }));
+}

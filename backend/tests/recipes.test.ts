@@ -78,6 +78,21 @@ describe("POST /api/recipes", () => {
     expect(recipe.steps[0]).toMatchObject({ duration: 30, durationUnit: "minutos" });
   });
 
+  it("guarda autoAdvance por etapa, com padrão false", async () => {
+    const { agent } = await signedUpAgent();
+    const recipe = await createRecipe(agent, {
+      ...canastra,
+      steps: [
+        { name: "Salga", duration: 1, durationUnit: "dias" },
+        { name: "Maturação", duration: 19, durationUnit: "dias", autoAdvance: true },
+      ],
+    });
+
+    expect(recipe.steps.map((s: { autoAdvance: boolean }) => s.autoAdvance)).toEqual([false, true]);
+    const fetched = await agent.get(`/api/recipes/${recipe.id}`);
+    expect(fetched.body.steps[1].autoAdvance).toBe(true);
+  });
+
   it("ignora maturationDays enviado pelo cliente", async () => {
     const { agent } = await signedUpAgent();
     const recipe = await createRecipe(agent, { ...canastra, maturationDays: 999 });

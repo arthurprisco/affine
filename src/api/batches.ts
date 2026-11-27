@@ -17,7 +17,10 @@ export type BatchStep = {
   plannedDate: string;
   /** AAAA-MM-DD, ou `null` enquanto pendente. */
   completedAt: string | null;
+  /** Observação registrada ao concluir. */
   notes: string | null;
+  /** Conclui sozinha na data prevista (a API aplica ao ler o lote). */
+  autoAdvance: boolean;
 };
 
 export type Batch = {
@@ -90,6 +93,32 @@ export function useCreateBatch() {
         queryClient.invalidateQueries({ queryKey: batchKeys.all }),
         queryClient.invalidateQueries({ queryKey: recipeKeys.all }),
       ]);
+    },
+  });
+}
+
+export type StepCompletionInput = {
+  stepId: string;
+  completed: boolean;
+  notes?: string;
+};
+
+/**
+ * Conclui (com a data de hoje) ou desfaz uma etapa do lote. A API valida a ordem e
+ * devolve o lote com as datas das etapas seguintes recalculadas.
+ */
+export function useSetStepCompleted(batchId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ stepId, ...body }: StepCompletionInput) =>
+      api<Batch>(
+        `/api/batches/${encodeURIComponent(batchId)}/steps/${encodeURIComponent(stepId)}`,
+        { method: "PATCH", body },
+      ),
+    onSuccess: (batch) => {
+      queryClient.setQueryData(batchKeys.detail(batch.id), batch);
+      return queryClient.invalidateQueries({ queryKey: batchKeys.list() });
     },
   });
 }

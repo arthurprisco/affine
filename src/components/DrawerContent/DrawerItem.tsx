@@ -22,24 +22,25 @@ type DrawerItemProps = {
  */
 const VARIANTS = {
   menu: {
-    container: "flex-row items-center gap-4 rounded-[10px] px-2 py-3.5",
-    label: "text-[15px]",
-    labelColor: "text-on-primary",
+    container: "flex-row items-center gap-4 rounded-lg px-2 py-3.5",
+    label: "text-sm",
+    labelColor: "font-body text-on-primary",
     iconBox: "w-5",
     iconSize: 20,
     iconColor: colors.on.primary.DEFAULT,
   },
   footer: {
     container: "flex-row items-center gap-4 px-2 py-3",
-    label: "text-[14px]",
-    labelColor: "text-on-primary-subtle",
-    iconBox: "w-[18px]",
+    label: "text-sm",
+    labelColor: "font-body text-on-primary-subtle",
+    iconBox: "w-5",
     iconSize: 18,
     iconColor: colors.on.primary.subtle,
   },
 } as const;
 
-const ACTIVE_LABEL = "text-accent font-semibold";
+// Família e cor juntas no ternário: a família define o peso (o RN não sintetiza negrito).
+const ACTIVE_LABEL = "font-body-semibold text-accent";
 
 export function DrawerItem({
   label,

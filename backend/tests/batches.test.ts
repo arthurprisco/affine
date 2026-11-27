@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../src/app.ts";
 import { db } from "../src/db/index.ts";
 import { signedUpAgent } from "./helpers.ts";
+import { addDays, planBatchSteps, todayISO } from "../src/shared/schedule.ts";
 
 type Agent = Awaited<ReturnType<typeof signedUpAgent>>["agent"];
 
@@ -16,8 +17,8 @@ const recipeBody = {
   ],
 };
 
-async function createRecipe(agent: Agent) {
-  const res = await agent.post("/api/recipes").send(recipeBody);
+async function createRecipe(agent: Agent, body: object = recipeBody) {
+  const res = await agent.post("/api/recipes").send(body);
   expect(res.status).toBe(201);
   return res.body;
 }
@@ -69,7 +70,7 @@ describe("POST /api/batches", () => {
       quantity: 20,
       unit: "un",
       startDate: "2026-01-10",
-        notes: "Tanque 2",
+      notes: "Tanque 2",
       recipe: { id: recipe.id, name: "Queijo Canastra", category: "Queijo" },
     });
     // 12 h → dia 1 (arredonda para cima); +2 dias → 3; +21 dias → 24
@@ -178,32 +179,107 @@ describe("GET /api/batches/:id", () => {
   });
 });
 
-describe("PATCH /api/batches/:id/steps/:stepId", () => {
-  it("conclui e desfaz uma etapa", async () => {
-    const { agent } = await signedUpAgent();
-    const { batch } = await createBatch(agent);
-    const stepId = batch.steps[0].id;
+type StepSpec = { name: string; duration: number; durationUnit: string; autoAdvance?: boolean };
+type BatchStepBody = { id: string; name: string; plannedDate: string; completedAt: string | null; autoAdvance: boolean; notes: string | null };
 
-    const done = await agent
-      .patch(`/api/batches/${batch.id}/steps/${stepId}`)
-      .send({ completed: true });
+const TODAY = todayISO();
+const daysAgo = (n: number) => addDays(TODAY, -n);
+
+let codeSeq = 0;
+
+/** Lote de uma receita com as etapas dadas, começando em `startDate` (código único). */
+async function batchWithSteps(agent: Agent, steps: StepSpec[], startDate: string) {
+  const recipe = await createRecipe(agent, { ...recipeBody, steps });
+  const code = `T${++codeSeq}`;
+  const res = await agent.post("/api/batches").send(batchBody(recipe.id, { startDate, code }));
+  expect(res.status).toBe(201);
+  return res.body as { id: string; steps: BatchStepBody[] };
+}
+
+function patchStep(agent: Agent, batchId: string, stepId: string, body: object) {
+  return agent.patch(`/api/batches/${batchId}/steps/${stepId}`).send(body);
+}
+
+const manual = (name: string, duration = 1): StepSpec => ({ name, duration, durationUnit: "dias" });
+const auto = (name: string, duration = 1): StepSpec => ({ ...manual(name, duration), autoAdvance: true });
+
+describe("PATCH /api/batches/:id/steps/:stepId", () => {
+  it("conclui a etapa atual com a data de hoje e a observação, e desfaz", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("Salga"), manual("Embalar")], daysAgo(5));
+    const [first] = batch.steps;
+
+    const done = await patchStep(agent, batch.id, first!.id, { completed: true, notes: "  pH 5,2 " });
     expect(done.status).toBe(200);
-    expect(done.body.steps[0].completedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(done.body.steps[0]).toMatchObject({ completedAt: TODAY, notes: "pH 5,2" });
     expect(done.body.steps[1].completedAt).toBeNull();
 
-    const undone = await agent
-      .patch(`/api/batches/${batch.id}/steps/${stepId}`)
-      .send({ completed: false });
-    expect(undone.body.steps[0].completedAt).toBeNull();
+    const undone = await patchStep(agent, batch.id, first!.id, { completed: false });
+    expect(undone.status).toBe(200);
+    // a observação fica guardada para quando a etapa for concluída de novo
+    expect(undone.body.steps[0]).toMatchObject({ completedAt: null, notes: "pH 5,2" });
+  });
+
+  it("recalcula as pendentes a partir da conclusão real e volta ao plano ao desfazer", async () => {
+    const { agent } = await signedUpAgent();
+    const start = daysAgo(10);
+    const batch = await batchWithSteps(agent, [manual("Salga", 2), manual("Maturação", 7)], start);
+    // previsto: salga em start+2, maturação em start+9; a salga é concluída hoje (8 dias de atraso)
+    expect(batch.steps[1]!.plannedDate).toBe(addDays(start, 9));
+
+    const done = await patchStep(agent, batch.id, batch.steps[0]!.id, { completed: true });
+    expect(done.body.steps[1].plannedDate).toBe(addDays(TODAY, 7));
+
+    const undone = await patchStep(agent, batch.id, batch.steps[0]!.id, { completed: false });
+    expect(undone.body.steps.map((s: BatchStepBody) => s.plannedDate)).toEqual(
+      planBatchSteps(start, [manual("Salga", 2), manual("Maturação", 7)] as never).map((s) => s.plannedDate),
+    );
+  });
+
+  it("exige a ordem: concluir a seguinte ou desfazer a anterior → 409 STEP_OUT_OF_ORDER", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("A"), manual("B"), manual("C")], daysAgo(5));
+    const [a, b] = batch.steps;
+
+    const skip = await patchStep(agent, batch.id, b!.id, { completed: true });
+    expect(skip.status).toBe(409);
+    expect(skip.body.code).toBe("STEP_OUT_OF_ORDER");
+
+    await patchStep(agent, batch.id, a!.id, { completed: true });
+    await patchStep(agent, batch.id, b!.id, { completed: true });
+    const undoFirst = await patchStep(agent, batch.id, a!.id, { completed: false });
+    expect(undoFirst.status).toBe(409);
+    expect(undoFirst.body.code).toBe("STEP_OUT_OF_ORDER");
+  });
+
+  it.each([
+    ["concluir duas vezes", "STEP_ALREADY_COMPLETED", true],
+    ["desfazer etapa pendente", "STEP_NOT_COMPLETED", false],
+  ])("recusa %s → 409", async (_caso, code, completed) => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("A"), manual("B")], daysAgo(5));
+    const stepId = batch.steps[0]!.id;
+    if (completed) await patchStep(agent, batch.id, stepId, { completed: true });
+
+    const res = await patchStep(agent, batch.id, stepId, { completed });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe(code);
+  });
+
+  it("lote que ainda não começou → 409 BATCH_NOT_STARTED", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("A")], addDays(TODAY, 3));
+    const res = await patchStep(agent, batch.id, batch.steps[0]!.id, { completed: true });
+
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("BATCH_NOT_STARTED");
   });
 
   it("etapa de lote de outro usuário → 404", async () => {
     const { agent } = await signedUpAgent();
     const outro = await signedUpAgent();
     const { batch } = await createBatch(outro.agent);
-    const res = await agent
-      .patch(`/api/batches/${batch.id}/steps/${batch.steps[0].id}`)
-      .send({ completed: true });
+    const res = await patchStep(agent, batch.id, batch.steps[0].id, { completed: true });
 
     expect(res.status).toBe(404);
   });
@@ -211,9 +287,77 @@ describe("PATCH /api/batches/:id/steps/:stepId", () => {
   it("recusa corpo sem `completed` → 400", async () => {
     const { agent } = await signedUpAgent();
     const { batch } = await createBatch(agent);
-    const res = await agent.patch(`/api/batches/${batch.id}/steps/${batch.steps[0].id}`).send({});
+    const res = await patchStep(agent, batch.id, batch.steps[0].id, {});
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe("avanço automático", () => {
+  it("o lote copia autoAdvance da receita", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("Salga"), auto("Maturar", 30)], addDays(TODAY, 1));
+
+    expect(batch.steps.map((s) => s.autoAdvance)).toEqual([false, true]);
+  });
+
+  it("conclui sozinha, em cadeia, as automáticas vencidas, na data prevista, até a próxima manual", async () => {
+    const { agent } = await signedUpAgent();
+    const start = daysAgo(10);
+    const batch = await batchWithSteps(
+      agent,
+      [auto("Descanso", 1), auto("Maturar", 2), manual("Embalar", 1), auto("Envelhecer", 1)],
+      start,
+    );
+    const res = await agent.get(`/api/batches/${batch.id}`);
+
+    expect(res.body.steps.map((s: BatchStepBody) => s.completedAt)).toEqual([
+      addDays(start, 1),
+      addDays(start, 3),
+      null,
+      null,
+    ]);
+  });
+
+  it("não avança se a etapa atual é manual, nem antes de a data chegar", async () => {
+    const { agent } = await signedUpAgent();
+    const pendingManual = await batchWithSteps(agent, [manual("Salga"), auto("Maturar")], daysAgo(10));
+    const notYet = await batchWithSteps(agent, [auto("Maturar", 30)], daysAgo(1));
+
+    const list = await agent.get("/api/batches");
+    const byId = new Map(list.body.map((b: { id: string; steps: BatchStepBody[] }) => [b.id, b.steps]));
+    expect((byId.get(pendingManual.id) as BatchStepBody[])[1]!.completedAt).toBeNull();
+    expect((byId.get(notYet.id) as BatchStepBody[])[0]!.completedAt).toBeNull();
+  });
+
+  it("concluir a manual libera a automática seguinte, reprevista a partir de hoje", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [manual("Salga"), auto("Maturar", 5)], daysAgo(10));
+
+    const done = await patchStep(agent, batch.id, batch.steps[0]!.id, { completed: true });
+    expect(done.body.steps[1]).toMatchObject({ completedAt: null, plannedDate: addDays(TODAY, 5) });
+  });
+
+  it("desfazer uma automática a torna manual neste lote e ela não volta a concluir sozinha", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [auto("Maturar", 2), manual("Embalar")], daysAgo(10));
+    const maturar = (await agent.get(`/api/batches/${batch.id}`)).body.steps[0];
+    expect(maturar.completedAt).toBe(addDays(daysAgo(10), 2));
+
+    const undone = await patchStep(agent, batch.id, maturar.id, { completed: false });
+    expect(undone.body.steps[0]).toMatchObject({ completedAt: null, autoAdvance: false });
+
+    const again = await agent.get(`/api/batches/${batch.id}`);
+    expect(again.body.steps[0].completedAt).toBeNull();
+  });
+
+  it("a automática atual pode ser concluída antes, manualmente", async () => {
+    const { agent } = await signedUpAgent();
+    const batch = await batchWithSteps(agent, [auto("Maturar", 30), manual("Embalar")], daysAgo(1));
+    const res = await patchStep(agent, batch.id, batch.steps[0]!.id, { completed: true });
+
+    expect(res.body.steps[0].completedAt).toBe(TODAY);
+    expect(res.body.steps[1].plannedDate).toBe(addDays(TODAY, 1));
   });
 });
 

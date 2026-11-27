@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ComponentProps } from "react";
+import { colors } from "../../shared/colors";
 
 type SpanMessageProps = {
   message: string;
@@ -15,15 +16,15 @@ const variants: Record<
   { box: string; text: string; color: string; icon: FeatherIconName }
 > = {
   error: {
-    box: "border-[red] bg-[#ffd8d8]",
-    text: "text-[red]",
-    color: "red",
+    box: "border-danger bg-danger-soft",
+    text: "font-body text-sm text-danger",
+    color: colors.danger.DEFAULT,
     icon: "alert-triangle",
   },
   success: {
-    box: "border-[green] bg-white",
-    text: "text-[green]",
-    color: "green",
+    box: "border-success bg-surface",
+    text: "font-body text-sm text-success",
+    color: colors.success,
     icon: "check",
   },
 };
@@ -33,7 +34,7 @@ export function SpanMessage({ message, type }: SpanMessageProps) {
 
   return (
     <View
-      className={`flex-row items-center gap-2 rounded-lg border px-3 py-[6px] ${variant.box}`}
+      className={`flex-row items-center gap-2 rounded-lg border px-3 py-1.5 ${variant.box}`}
     >
       <Feather name={variant.icon} size={20} color={variant.color} />
       <Text className={variant.text}>{message}</Text>

@@ -53,7 +53,19 @@ export function AgendaRow({
       </View>
 
       <View className="flex-1 gap-0.5">
-        <Text className="font-body-medium text-sm text-ink">{step.name}</Text>
+        <View className="flex-row items-center gap-1.5">
+          <Text className="shrink font-body-medium text-sm text-ink">
+            {step.name}
+          </Text>
+          {step.autoAdvance && !done && (
+            <Feather
+              name="clock"
+              size={12}
+              color={colors.ink.muted}
+              accessibilityLabel="Avança sozinha"
+            />
+          )}
+        </View>
         <Text className="font-body text-xs text-ink-muted">
           {batch.recipe.name} · Lote #{batch.code}
         </Text>

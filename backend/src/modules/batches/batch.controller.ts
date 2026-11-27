@@ -28,8 +28,8 @@ export async function create(req: Request, res: Response) {
 
 export async function setStepCompleted(req: Request, res: Response) {
   const { id, stepId } = batchStepParamsSchema.parse(req.params);
-  const { completed } = stepCompletionSchema.parse(req.body);
-  res.json(await BatchService.setStepCompleted(id, stepId, userId(req), completed));
+  const body = stepCompletionSchema.parse(req.body);
+  res.json(await BatchService.setStepCompleted(id, stepId, userId(req), body));
 }
 
 export async function remove(req: Request, res: Response) {

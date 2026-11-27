@@ -100,6 +100,7 @@ function StepTimeline({ recipe }: { recipe: Recipe }) {
               </Text>
               <Text className="font-body text-xs text-ink-muted">
                 {step.duration} {unit}
+                {step.autoAdvance ? " · avança sozinha" : ""}
               </Text>
               {step.description && (
                 <Text className="mt-1 font-body text-xs text-ink">
@@ -150,10 +151,10 @@ function RecipeActions({
         }
       >
         {deleting ? (
-          <ActivityIndicator size="small" color={colors.danger} />
+          <ActivityIndicator size="small" color={colors.danger.DEFAULT} />
         ) : (
           <>
-            <Feather name="trash-2" size={16} color={colors.danger} />
+            <Feather name="trash-2" size={16} color={colors.danger.DEFAULT} />
             <Text className="font-body-medium text-sm text-danger">
               Excluir
             </Text>

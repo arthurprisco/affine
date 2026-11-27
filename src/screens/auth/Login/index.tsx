@@ -8,6 +8,7 @@ import { useState } from "react";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../../routes/auth.routes";
 import { Feather } from "@expo/vector-icons";
+import { colors } from "../../../shared/colors";
 import { SpanMessage } from "../../../components/SpanMessage";
 import { useLogin } from "./useLogin";
 import { Button } from "../../../components/Button";
@@ -31,7 +32,7 @@ export function LoginScreen() {
         <View className="mt-10 w-full items-center p-6">
           <Image
             source={require("../../../assets/logo-1.png")}
-            className="mb-10 h-[160px] w-[160px]"
+            className="mb-10 h-40 w-40"
           />
           <Title label="Login" />
           <View className="w-full gap-4">
@@ -41,7 +42,9 @@ export function LoginScreen() {
               value={email}
               onChangeText={setEmal}
               keyboardType="email-address"
-              rightIcon={<Feather name="mail" size={20} color={"#9A9A9A"} />}
+              rightIcon={
+                <Feather name="mail" size={20} color={colors.ink.placeholder} />
+              }
             />
             <Input
               label="Senha"
@@ -54,7 +57,7 @@ export function LoginScreen() {
                   <Feather
                     name={showPassoword ? "eye-off" : "eye"}
                     size={20}
-                    color={"#9A9A9A"}
+                    color={colors.ink.placeholder}
                   />
                 </Pressable>
               }
@@ -62,7 +65,7 @@ export function LoginScreen() {
             {error ? <SpanMessage message={error} type="error" /> : null}
           </View>
 
-          <Text className="w-full py-1 pl-2 text-left text-accent-text">
+          <Text className="w-full py-1 pl-2 text-left font-body text-sm text-accent-text">
             Esqueceu sua senha?
           </Text>
 
@@ -72,16 +75,15 @@ export function LoginScreen() {
             disabled={loading}
           />
 
-          <View
-            className="mb-5 h-[2px] w-full"
-            style={{
-              backgroundColor: "gray", // AQUI
-            }}
-          ></View>
+          <View className="mb-5 h-0.5 w-full bg-line" />
           <View className="flex-row">
-            <Text>Não possui conta? </Text>
+            <Text className="font-body text-sm text-ink">
+              Não possui conta?{" "}
+            </Text>
             <Pressable onPress={() => navigation.navigate("Register")}>
-              <Text className="text-accent-text">Crie sua conta</Text>
+              <Text className="font-body text-sm text-accent-text">
+                Crie sua conta
+              </Text>
             </Pressable>
           </View>
         </View>

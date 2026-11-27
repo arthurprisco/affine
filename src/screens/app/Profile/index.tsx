@@ -135,9 +135,9 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
       >
         {/* Identificação */}
-        <View className="items-center gap-3 rounded-md border border-line bg-white p-4">
+        <View className="items-center gap-3 rounded-md border border-line bg-surface p-4">
           <View className="h-20 w-20 items-center justify-center rounded-full bg-primary">
-            <Text className="font-body-semibold text-lg text-white">
+            <Text className="font-body-semibold text-lg text-on-primary-strong">
               {getInitials(name)}
             </Text>
           </View>
@@ -145,12 +145,12 @@ export default function Profile() {
           <View className="items-center gap-1">
             <Text className="font-body-medium text-base text-ink">{name}</Text>
             {user?.email && (
-              <Text className="font-body text-xs text-ink/60">
+              <Text className="font-body text-xs text-ink-muted">
                 {user.email}
               </Text>
             )}
             {memberSince && (
-              <Text className="font-body text-xs text-ink/60">
+              <Text className="font-body text-xs text-ink-muted">
                 {memberSince}
               </Text>
             )}
@@ -160,7 +160,7 @@ export default function Profile() {
             accessibilityRole="button"
             accessibilityLabel="Editar perfil"
             onPress={() => navigation.navigate("EditProfile")}
-            className="w-full flex-row items-center justify-center gap-2 rounded-sm border border-line bg-white py-3 active:opacity-70"
+            className="w-full flex-row items-center justify-center gap-2 rounded-sm border border-line bg-surface py-3 active:opacity-70"
           >
             <Feather name="edit-2" size={16} color={colors.ink.DEFAULT} />
             <Text className="font-body-medium text-sm text-ink">
@@ -173,12 +173,12 @@ export default function Profile() {
         <View className="gap-2">
           <Title label="Notificações" />
 
-          <View className="gap-3 rounded-md border border-line bg-white p-3">
+          <View className="gap-3 rounded-md border border-line bg-surface p-3">
             <View className="gap-1">
               <Text className="font-body-medium text-sm text-ink">
                 Frequência dos alertas
               </Text>
-              <Text className="font-body text-xs text-ink/60">
+              <Text className="font-body text-xs text-ink-muted">
                 Escolha quando deseja receber alertas sobre seus lotes.
               </Text>
             </View>
@@ -194,15 +194,15 @@ export default function Profile() {
                     onPress={() => setFrequency(item)}
                     className={
                       active
-                        ? "flex-1 items-center rounded-sm border border-accent bg-accent/20 py-2"
-                        : "flex-1 items-center rounded-sm border border-line bg-white py-2"
+                        ? "flex-1 items-center rounded-sm border border-accent-strong bg-accent-soft py-2"
+                        : "flex-1 items-center rounded-sm border border-line bg-surface py-2"
                     }
                   >
                     <Text
                       className={
                         active
-                          ? "font-body text-xs text-on-accent"
-                          : "font-body text-xs text-ink/60"
+                          ? "font-body text-xs text-accent-text"
+                          : "font-body text-xs text-ink-muted"
                       }
                     >
                       {item}
@@ -213,7 +213,7 @@ export default function Profile() {
             </View>
           </View>
 
-          <View className="rounded-md border border-line bg-white px-3">
+          <View className="rounded-md border border-line bg-surface px-3">
             {notificationTypes.map((item, index) => (
               <View
                 key={item.key}
@@ -230,7 +230,7 @@ export default function Profile() {
                   <Text className="font-body-medium text-sm text-ink">
                     {item.title}
                   </Text>
-                  <Text className="font-body text-xs text-ink/60">
+                  <Text className="font-body text-xs text-ink-muted">
                     {item.description}
                   </Text>
                 </View>
@@ -255,7 +255,7 @@ export default function Profile() {
         <View className="gap-2">
           <Title label="Histórico" />
 
-          <View className="rounded-md border border-line bg-white px-3">
+          <View className="rounded-md border border-line bg-surface px-3">
             {history.length ? (
               history.map((item, index) => (
                 <View
@@ -282,10 +282,10 @@ export default function Profile() {
                         <View className="h-2 w-2 rounded-full bg-accent" />
                       )}
                     </View>
-                    <Text className="font-body text-xs text-ink/60">
+                    <Text className="font-body text-xs text-ink-muted">
                       {item.description}
                     </Text>
-                    <Text className="mt-1 font-body text-2xs text-ink/60">
+                    <Text className="mt-1 font-body text-2xs text-ink-muted">
                       {item.date} · {item.time}
                       {item.read ? "" : " · Não lida"}
                     </Text>
@@ -302,7 +302,7 @@ export default function Profile() {
                 <Text className="mt-2 font-body-medium text-sm text-ink">
                   Nenhuma notificação ainda
                 </Text>
-                <Text className="text-center font-body text-xs text-ink/60">
+                <Text className="text-center font-body text-xs text-ink-muted">
                   Quando receber alertas sobre seus lotes, eles aparecerão aqui.
                 </Text>
               </View>

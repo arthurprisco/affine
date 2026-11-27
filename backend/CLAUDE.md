@@ -75,7 +75,7 @@ Peças compartilhadas:
 |---|---|---|
 | GET | `/` | só as ativas; `?archived=true` lista só as arquivadas. Ordem alfabética, com `steps` |
 | GET | `/:id` | receita com `steps` ordenadas por `position` |
-| POST | `/` | `{ name, category, description?, steps: [{ name, duration, durationUnit, description? }] }` → 201 |
+| POST | `/` | `{ name, category, description?, steps: [{ name, duration, durationUnit, description?, autoAdvance? }] }` → 201 |
 | PUT | `/:id` | mesmo corpo do POST; **substitui** a receita e todas as etapas |
 | PATCH | `/:id/archive`, `/:id/unarchive` | preenche ou limpa `archivedAt` |
 | DELETE | `/:id` | 204; **409 `RECIPE_HAS_BATCHES`** se houver lotes (o cliente deve arquivar) |
@@ -94,9 +94,9 @@ Detalhes que não são óbvios:
 `user` 1─N `recipe` 1─N `step`; `user` 1─N `batch` N─1 `recipe`; `batch` 1─N `batch_step` N─0..1 `step`.
 
 - **recipe**: receita de produto, com `maturation_days` (soma das etapas em dias, arredondada para cima). **Não existe validade/vencimento** em lugar nenhum: os produtos são maturados (quanto mais envelhecidos, melhor). Com lotes ela não pode ser apagada (`batch.recipe_id` é `ON DELETE RESTRICT`): use `archived_at`.
-- **step**: etapa-modelo da receita, ordenada por `position` (único por receita). A duração é `duration` (inteiro ≥ 1) + `duration_unit` (enum pg `duration_unit`: minutos, horas, dias, semanas, meses, anos). As unidades e os fatores de conversão (mês = 30 dias, ano = 365) ficam em `src/shared/duration.ts` e **precisam ficar iguais aos de `src/shared/duration.ts` do app**.
+- **step**: etapa-modelo da receita, ordenada por `position` (único por receita). A duração é `duration` (inteiro ≥ 1) + `duration_unit` (enum pg `duration_unit`: minutos, horas, dias, semanas, meses, anos). As unidades e os fatores de conversão (mês = 30 dias, ano = 365) ficam em `src/shared/duration.ts` e **precisam ficar iguais aos de `src/shared/duration.ts` do app**. `auto_advance` (padrão `false`) marca etapa de espera (maturar, envelhecer), que avança sozinha.
 - **batch**: lote; `code` único por usuário, `quantity` numeric + `unit`, `start_date`. Tem `user_id` próprio (para filtrar por sessão sem join), então ao criar um lote é preciso **validar que a receita pertence ao mesmo usuário** — o banco não garante isso.
-- **batch_step**: etapa executada do lote. Ao criar o lote, **copie** `position`/`name`/`duration`/`duration_unit` da etapa-modelo (em vez de só referenciar `step_id`, que vira `null` se a etapa for apagada); assim editar a receita não altera o histórico. `planned_date` = dia em que a etapa termina, pelo tempo acumulado desde `start_date` (`totalDays` das etapas até ela; etapas de minutos/horas terminam no mesmo dia ou no seguinte); `completed_at` nulo = pendente.
+- **batch_step**: etapa executada do lote. Ao criar o lote, **copie** `position`/`name`/`duration`/`duration_unit`/`auto_advance` da etapa-modelo (em vez de só referenciar `step_id`, que vira `null` se a etapa for apagada); assim editar a receita não altera o histórico. `planned_date` = dia em que a etapa termina, pelo tempo acumulado desde `start_date` (`totalDays` das etapas até ela; etapas de minutos/horas terminam no mesmo dia ou no seguinte); `completed_at` nulo = pendente; `notes` = observação registrada na conclusão.
 - **Não existe coluna de status**: planejado/em maturação/atrasado/pronto são derivados de `batch_step` + `start_date` + data atual.
 - Datas de calendário usam `date` com `mode: "string"` (`YYYY-MM-DD`); ids são `text` com `crypto.randomUUID()`.
 
@@ -109,5 +109,12 @@ Todo lote volta com `steps` (ordenadas por `position`) e `recipe: { id, name, ca
 | GET | `/` | lotes do usuário, `startDate` mais recente primeiro |
 | GET | `/:id` | um lote |
 | POST | `/` | `{ recipeId, code, quantity, unit, startDate, notes? }` (data AAAA-MM-DD) → 201. Copia as etapas da receita para `batch_step` com `plannedDate` = dia em que a etapa termina (`planBatchSteps` em `src/shared/schedule.ts`, o mesmo usado pelo seed). 409 `BATCH_CODE_TAKEN` (código repetido do usuário) e 409 `RECIPE_ARCHIVED` |
-| PATCH | `/:id/steps/:stepId` | `{ completed: boolean }`: preenche `completedAt` com hoje ou limpa |
+| PATCH | `/:id/steps/:stepId` | `{ completed: boolean, notes? }`: conclui com a data de hoje ou desfaz. Regras abaixo. 409 `BATCH_NOT_STARTED`, `STEP_OUT_OF_ORDER`, `STEP_ALREADY_COMPLETED`, `STEP_NOT_COMPLETED` |
 | DELETE | `/:id` | → 204; as etapas vão em cascata |
+
+### Avanço das etapas (`batch.service.ts` + `src/shared/schedule.ts`)
+
+- **Sequencial**: só a etapa atual (primeira pendente) pode ser concluída e só a última concluída pode ser desfeita. Lote com `startDate` futuro não avança.
+- **Manual**: conclusão sempre com a data de hoje, com `notes` opcional. Desfazer mantém `notes`.
+- **Recálculo**: depois de concluir ou desfazer, as pendentes são reprevistas a partir do `completedAt` da última concluída (ou do `startDate`), com `replanPending` → `planBatchSteps`. As concluídas não mudam.
+- **Automático** (`auto_advance`): etapa automática que é a atual e tem `planned_date <= hoje` é concluída com `completed_at = planned_date`, em cadeia, até a primeira etapa manual ou futura (`dueAutoSteps`). Não há agendador: `list` e `getById` aplicam isso **na leitura** (`advanceDueSteps`) e gravam numa transação. Desfazer uma etapa automática grava `auto_advance = false` naquele lote, senão a próxima leitura a concluiria de novo.

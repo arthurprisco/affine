@@ -61,7 +61,7 @@ Antes de criar ou alterar qualquer componente visual, leia @docs/DESIGN.md
 
 ### Estado atual do produto
 
-Ainda há **maquetes com dados hardcoded**: o histórico de notificações do `Profile` é fixo. O componente `CircularProgress` não é usado em nenhuma tela. Receitas (`Recipes`, `RecipeDetail`, `NewRecipe`, `EditRecipe`) e lotes (`AllBatches`, `BatchDetail`, `AddBatch`, a `Home` e a agenda `Planner`, que monta o calendário a partir de `useBatches()`) já usam a API de verdade. O status do lote (planejado, em maturação, atrasado, pronto) não é guardado: é derivado no app em `src/shared/batch.ts`. Lotes **não têm vencimento**: os produtos são maturados, quanto mais envelhecidos, melhor.
+Ainda há **maquetes com dados hardcoded**: o histórico de notificações do `Profile` é fixo. Receitas (`Recipes`, `RecipeDetail`, `NewRecipe`, `EditRecipe`) e lotes (`AllBatches`, `BatchDetail`, `AddBatch`, a `Home` e a agenda `Planner`, que monta o calendário a partir de `useBatches()`) já usam a API de verdade. O status do lote (planejado, em maturação, atrasado, pronto) não é guardado: é derivado no app em `src/shared/batch.ts`. Lotes **não têm vencimento**: os produtos são maturados, quanto mais envelhecidos, melhor. As etapas do lote avançam em ordem: as manuais são concluídas na `BatchDetail` (data de hoje), as marcadas como "Avança sozinha" na receita são concluídas pela API na data prevista, e concluir ou desfazer recalcula as datas das seguintes (regras em `backend/CLAUDE.md`).
 
 ### Dados da API no app
 
