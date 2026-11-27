@@ -12,6 +12,7 @@ import type { DrawerParamList } from "../../routes/drawer.routes";
 import { DrawerItem } from "./DrawerItem";
 import { isTabRoute, menuItems, MenuRoute } from "./menuItems";
 import { useSignOut } from "./useSignOut";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 // Componente de terceiros: precisa ser registrado para aceitar className.
 const DrawerScrollView = cssInterop(DrawerContentScrollView, {
@@ -45,7 +46,13 @@ export function DrawerContent(props: DrawerContentComponentProps) {
     props.navigation as unknown as DrawerNavigationProp<DrawerParamList>;
 
   const activeRoute = getActiveRoute(props.state);
-  const { isSigningOut, confirmSignOut } = useSignOut(navigation.closeDrawer);
+  const {
+    isSigningOut,
+    confirming,
+    confirmSignOut,
+    cancelSignOut,
+    handleSignOut,
+  } = useSignOut(navigation.closeDrawer);
 
   function navigate(route: MenuRoute) {
     if (isTabRoute(route)) {
@@ -112,6 +119,16 @@ export function DrawerContent(props: DrawerContentComponentProps) {
           />
         </View>
       </View>
+
+      <ConfirmDialog
+        visible={confirming}
+        title="Sair da conta?"
+        message="Você precisará entrar novamente para acessar seus lotes e receitas."
+        confirmLabel="Sair"
+        destructive
+        onConfirm={handleSignOut}
+        onCancel={cancelSignOut}
+      />
     </DrawerScrollView>
   );
 }

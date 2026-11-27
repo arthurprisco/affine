@@ -5,7 +5,10 @@ import { authClient } from "../../lib/auth-client";
 export function useSignOut(onStart?: () => void) {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
+  const [confirming, setConfirming] = useState(false);
+
   async function handleSignOut() {
+    setConfirming(false);
     setIsSigningOut(true);
     onStart?.();
 
@@ -26,11 +29,18 @@ export function useSignOut(onStart?: () => void) {
   function confirmSignOut() {
     if (isSigningOut) return;
 
-    Alert.alert("Sair", "Deseja realmente sair da sua conta?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", style: "destructive", onPress: handleSignOut },
-    ]);
+    setConfirming(true);
   }
 
-  return { isSigningOut, confirmSignOut };
+  function cancelSignOut() {
+    setConfirming(false);
+  }
+
+  return {
+    isSigningOut,
+    confirming,
+    confirmSignOut,
+    cancelSignOut,
+    handleSignOut,
+  };
 }
